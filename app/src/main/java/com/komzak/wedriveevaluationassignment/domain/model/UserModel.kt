@@ -6,8 +6,8 @@ data class UserModel(
     val id: Int?,
     val phone: String?,
     val balance: Double?,
-    val activeMethod: String?,
-    val activeCardId: Int?
+    val activeMethod: PaymentMethod?,
+    val activeCardId: Long?
 )
 
 fun UserResponse.toDomain(): UserModel {
@@ -15,7 +15,17 @@ fun UserResponse.toDomain(): UserModel {
         id = id,
         phone = phone,
         balance = balance,
-        activeMethod = activeMethod,
+        activeMethod = activeMethod?.let { PaymentMethod.fromString(it) },
         activeCardId = activeCardId
     )
+}
+
+enum class PaymentMethod(val method: String) {
+    CASH("cash"),
+    CARD("card");
+
+    companion object {
+        fun fromString(method: String) =
+            PaymentMethod.entries.firstOrNull { it.method == method } ?: CASH
+    }
 }

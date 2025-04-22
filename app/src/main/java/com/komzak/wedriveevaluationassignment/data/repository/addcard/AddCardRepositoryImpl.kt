@@ -1,22 +1,26 @@
-package com.komzak.wedriveevaluationassignment.data.repository.wallet
+package com.komzak.wedriveevaluationassignment.data.repository.addcard
 
 import com.komzak.wedriveevaluationassignment.common.AppError
 import com.komzak.wedriveevaluationassignment.common.DataResult
 import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApi
-import com.komzak.wedriveevaluationassignment.data.remote.model.response.UserResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.request.CardRequest
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.CardResponse
 import com.komzak.wedriveevaluationassignment.utils.executeApiCall
 import kotlinx.coroutines.flow.firstOrNull
 
-class GetUserWalletRepositoryImpl(
+class AddCardRepositoryImpl(
     private val api: WeDriveApi,
     private val dataStoreHelper: DataStoreHelper
-) : GetUserWalletRepository {
-    override suspend fun getUserWallet(): DataResult<UserResponse, AppError> {
+) : AddCardRepository {
+    override suspend fun addCard(
+        number: String,
+        expire: String
+    ): DataResult<CardResponse, AppError> {
         val phone = dataStoreHelper.getPhoneNumber().firstOrNull() ?: ""
 
         return executeApiCall(
-            call = { api.getWallet(phone) }
+            call = { api.addCard(CardRequest(number, expire), phone) }
         )
     }
 }

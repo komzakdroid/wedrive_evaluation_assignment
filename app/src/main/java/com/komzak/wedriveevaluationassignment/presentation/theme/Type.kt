@@ -19,9 +19,18 @@ val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FigtreeFontFamily,
         fontWeight = FontWeight.Normal,
+        color = primaryTextColor,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = FigtreeFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.sp,
+        lineHeight = 18.sp,
+        color = primaryTextColor,
+        letterSpacing = 2.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = FigtreeFontFamily,
@@ -41,6 +50,7 @@ val Typography = Typography(
         fontFamily = FigtreeFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 25.sp,
+        color = primaryTextColor,
         lineHeight = 28.sp,
         letterSpacing = 2.sp
     ),
@@ -49,6 +59,7 @@ val Typography = Typography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 24.sp,
+        color = primaryTextColor,
         letterSpacing = 0.15.sp
     ),
     labelSmall = TextStyle(

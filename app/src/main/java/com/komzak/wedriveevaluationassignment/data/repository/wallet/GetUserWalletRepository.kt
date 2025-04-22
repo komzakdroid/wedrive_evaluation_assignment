@@ -5,5 +5,5 @@ import com.komzak.wedriveevaluationassignment.common.DataResult
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.UserResponse
 
 interface GetUserWalletRepository {
-    suspend fun getUserWallet(phone: String): DataResult<UserResponse, AppError>
+    suspend fun getUserWallet(): DataResult<UserResponse, AppError>
 }

@@ -15,6 +15,10 @@
     <string name="wallet">Wallet</string>
     <string name="balance">Balance</string>
     <string name="add_promo">Add PROMO CODE</string>
+    <string name="enter_promo">Enter Promo code</string>
     <string name="add_card">Add new card</string>
     <string name="identification_required">Identification required</string>
+    <string name="add_card_title">Add Card</string>
+    <string name="save">Save</string>
+    <string name="enter_phone_number">Enter Phone Number</string>
 </resources>

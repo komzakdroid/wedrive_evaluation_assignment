@@ -9,5 +9,5 @@ data class UserResponse(
     val phone: String?,
     val balance: Double?,
     @SerialName("active_method") val activeMethod: String?,
-    @SerialName("active_card_id") val activeCardId: Int?
+    @SerialName("active_card_id") val activeCardId: Long?
 )
