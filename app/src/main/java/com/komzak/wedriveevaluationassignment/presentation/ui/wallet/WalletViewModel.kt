@@ -37,8 +37,6 @@ class WalletViewModel(
             dataStoreHelper.getPhoneNumber().collect { savedPhone ->
                 if (savedPhone != null) {
                     _uiState.update { it.copy(isIdentificationRequired = false) }
-                    getWallets()
-                    getCards()
                 }
             }
         }
@@ -154,6 +152,9 @@ class WalletViewModel(
             createUser(phone)
             dataStoreHelper.savePhoneNumber(phone)
             _uiState.update { it.copy(isIdentificationRequired = false) }
+
+            getWallets()
+            getCards()
             closePhoneSheet()
         }
     }
@@ -163,12 +164,12 @@ class WalletViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = getWalletUseCase()) {
                 is DataResult.Success -> {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { currentState ->
+                        currentState.copy(
                             isLoading = false,
                             isSuccess = true,
                             selectedMethod = result.data.activeMethod ?: PaymentMethod.CASH,
-                            activeCardId = result.data.activeCardId ?: -1,
+                            activeCardId = result.data.activeCardId ?: currentState.activeCardId,
                         )
                     }
                 }
@@ -201,13 +202,14 @@ class WalletViewModel(
                         return@launch
                     }
 
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { currentState ->
+                        currentState.copy(
                             isLoading = false,
                             isSuccess = true,
                             selectedCard = result.data.firstOrNull()?.number?.maskCardNumber()
                                 ?: "",
-                            activeCardId = result.data.firstOrNull()?.id ?: -1
+                            activeCardId = result.data.firstOrNull()?.id
+                                ?: currentState.activeCardId
                         )
                     }
                 }
@@ -224,19 +226,19 @@ class WalletViewModel(
         }
     }
 
-    fun createUser(phone: String) {
+    private fun createUser(phone: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = createUserUseCase(phone)) {
                 is DataResult.Success -> {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { currentState ->
+                        currentState.copy(
                             isLoading = false,
                             isSuccess = true,
                             balance = result.data.balance.toString(),
                             user = result.data,
                             selectedMethod = result.data.activeMethod ?: PaymentMethod.CASH,
-                            activeCardId = result.data.activeCardId ?: -1,
+                            activeCardId = result.data.activeCardId ?: currentState.activeCardId,
                             message = "User created successfully"
                         )
                     }
