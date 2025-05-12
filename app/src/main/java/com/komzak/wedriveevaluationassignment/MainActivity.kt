@@ -21,6 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.komzak.wedriveevaluationassignment.common.ResourceProvider
 import com.komzak.wedriveevaluationassignment.presentation.navigation.AppNavigation
 import com.komzak.wedriveevaluationassignment.presentation.theme.Typography
+import com.komzak.wedriveevaluationassignment.presentation.theme.WeDriveEvaluationAssignmentTheme
+import com.komzak.wedriveevaluationassignment.presentation.theme.secondaryBackground
 import com.komzak.wedriveevaluationassignment.utils.NetworkMonitor
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -33,10 +35,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AppContent(
-                networkMonitor = networkMonitor,
-                resourceProvider = resourceProvider
-            )
+            WeDriveEvaluationAssignmentTheme {
+                AppContent(
+                    networkMonitor = networkMonitor,
+                    resourceProvider = resourceProvider
+                )
+            }
         }
     }
 }
@@ -65,6 +69,7 @@ fun AppContent(
 
     MaterialTheme(typography = Typography) {
         Scaffold(
+            containerColor = secondaryBackground,
             snackbarHost = {
                 SnackbarHost(
                     hostState = snackbarHostState,

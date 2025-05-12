@@ -1,28 +1,21 @@
 package com.komzak.wedriveevaluationassignment.di
 
+import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.data.remote.KtorClient
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApi
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApiImpl
-import com.komzak.wedriveevaluationassignment.data.repository.addcard.AddCardRepository
-import com.komzak.wedriveevaluationassignment.data.repository.addcard.AddCardRepositoryImpl
-import com.komzak.wedriveevaluationassignment.data.repository.card.GetUserCardsRepository
-import com.komzak.wedriveevaluationassignment.data.repository.card.GetUserCardsRepositoryImpl
-import com.komzak.wedriveevaluationassignment.data.repository.method.UpdateMethodRepository
-import com.komzak.wedriveevaluationassignment.data.repository.method.UpdateMethodRepositoryImpl
-import com.komzak.wedriveevaluationassignment.data.repository.promo.ActivatePromoRepository
-import com.komzak.wedriveevaluationassignment.data.repository.promo.ActivatePromoRepositoryImpl
-import com.komzak.wedriveevaluationassignment.data.repository.user.CreateUserRepository
-import com.komzak.wedriveevaluationassignment.data.repository.user.CreateUserRepositoryImpl
-import com.komzak.wedriveevaluationassignment.data.repository.wallet.GetUserWalletRepository
-import com.komzak.wedriveevaluationassignment.data.repository.wallet.GetUserWalletRepositoryImpl
-import com.komzak.wedriveevaluationassignment.domain.usecase.ActivatePromoUseCase
-import com.komzak.wedriveevaluationassignment.domain.usecase.AddCardUseCase
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUserRepository
+import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUserRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepository
+import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateUserUseCase
-import com.komzak.wedriveevaluationassignment.domain.usecase.GetUserCardsUseCase
-import com.komzak.wedriveevaluationassignment.domain.usecase.GetUserWalletUseCase
-import com.komzak.wedriveevaluationassignment.domain.usecase.UpdateMethodUseCase
-import com.komzak.wedriveevaluationassignment.presentation.ui.addcard.AddCardViewModel
-import com.komzak.wedriveevaluationassignment.presentation.ui.wallet.WalletViewModel
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.LoginUserUseCase
+import com.komzak.wedriveevaluationassignment.presentation.ui.home.HomeViewModel
+import com.komzak.wedriveevaluationassignment.presentation.ui.login.LoginViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -30,26 +23,21 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val dataModule = module {
-    single { KtorClient.createHttpClient(get()) }
+    single { DataStoreHelper(androidContext()) }
+    single { KtorClient.createHttpClient(get(), get()) }
     singleOf(::WeDriveApiImpl) { bind<WeDriveApi>() }
     singleOf(::CreateUserRepositoryImpl) { bind<CreateUserRepository>() }
-    singleOf(::GetUserWalletRepositoryImpl) { bind<GetUserWalletRepository>() }
-    singleOf(::ActivatePromoRepositoryImpl) { bind<ActivatePromoRepository>() }
-    singleOf(::UpdateMethodRepositoryImpl) { bind<UpdateMethodRepository>() }
-    singleOf(::GetUserCardsRepositoryImpl) { bind<GetUserCardsRepository>() }
-    singleOf(::AddCardRepositoryImpl) { bind<AddCardRepository>() }
+    singleOf(::LoginUserRepositoryImpl) { bind<LoginUserRepository>() }
+    singleOf(::GetAllBalanceRepositoryImpl) { bind<GetAllBalanceRepository>() }
 }
 
 val domainModule = module {
     factoryOf(::CreateUserUseCase)
-    factoryOf(::GetUserWalletUseCase)
-    factoryOf(::ActivatePromoUseCase)
-    factoryOf(::UpdateMethodUseCase)
-    factoryOf(::GetUserCardsUseCase)
-    factoryOf(::AddCardUseCase)
+    factoryOf(::LoginUserUseCase)
+    factoryOf(::GetAllBalanceUseCase)
 }
 
 val presentationModule = module {
-    viewModel { WalletViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { AddCardViewModel(get(), get()) }
+    viewModel { LoginViewModel(get()) }
+    viewModel { HomeViewModel(get(), get()) }
 }

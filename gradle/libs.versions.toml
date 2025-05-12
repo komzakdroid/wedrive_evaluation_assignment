@@ -1,6 +1,6 @@
 # Versions
 [versions]
-agp = "8.9.1"
+agp = "8.10.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -15,6 +15,7 @@ ksp = "2.0.21-1.0.25"
 koin_annotations = "2.0.0"
 datastore = "1.1.4"
 chucker = "3.5.2"
+shimmer = "1.3.2"
 
 # Libraries
 [libraries]
@@ -33,6 +34,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.7.7" }
+shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version.ref = "shimmer" }
 
 # Added for Ktor Client
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }

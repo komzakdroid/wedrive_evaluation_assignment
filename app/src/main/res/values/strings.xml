@@ -1,24 +1,19 @@
 <resources>
-    <string name="app_name">WeDrive Evaluation Assignment</string>
-    <string name="response_not_valid">Invalid response from server.</string>
-    <string name="no_internet">No internet connection. Please check your network settings.</string>
-    <string name="network_error">Network error occurred. Please check your connection.</string>
-    <string name="bad_request">Invalid request. Please check your input.</string>
-    <string name="unauthorized">Unauthorized access. Please log in.</string>
-    <string name="forbidden">Access denied. You don’t have permission.</string>
-    <string name="not_found">Resource not found.</string>
-    <string name="client_error">A client error occurred.</string>
-    <string name="server_error">A server error occurred. Please try again later.</string>
-    <string name="service_unavailable">Service is temporarily unavailable.</string>
-    <string name="dismiss">Dismiss</string>
+    <string name="app_name">Hisobchi</string>
+    <string name="response_not_valid">Server xato javob yubordi</string>
+    <string name="no_internet">Internet ulanmagan. Internet bilan ulanishni tekshiring.</string>
+    <string name="network_error">Internet bilan ulanishda xatolik. Iltimos ulanishni tekshiring.</string>
+    <string name="bad_request">Xato so`rov. Iltimos, kiritilgan ma`lumotlarni tekshiring.</string>
+    <string name="unauthorized">Avtorizatsiya qilinmagan so`rov. Iltimos, tizimga kiring.</string>
+    <string name="forbidden">Ruxsat etilmadi. Sizda tegishli ruxsat mavjud emas.</string>
+    <string name="not_found">Ushbu resurs mavjud emas.</string>
+    <string name="client_error">Foydalanuvchi bilan muammo.</string>
+    <string name="server_error">Server bilan ulanishda xatolik, Iltimos keyinroq urinib ko`ring.</string>
+    <string name="service_unavailable">Server vaqtinchalik faol emas.</string>
+    <string name="dismiss">O`tkazib yuborish</string>
 
-    <string name="wallet">Wallet</string>
-    <string name="balance">Balance</string>
-    <string name="add_promo">Add PROMO CODE</string>
-    <string name="enter_promo">Enter Promo code</string>
-    <string name="add_card">Add new card</string>
-    <string name="identification_required">Identification required</string>
-    <string name="add_card_title">Add Card</string>
-    <string name="save">Save</string>
-    <string name="enter_phone_number">Enter Phone Number</string>
+    <string name="login">Tizimga kirish</string>
+    <string name="phone_number">Telefon raqamni kiriting</string>
+    <string name="password">Parolni kiriting</string>
+    <string name="save">Saqlash</string>
 </resources>

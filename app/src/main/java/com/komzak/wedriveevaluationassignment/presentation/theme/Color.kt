@@ -3,6 +3,7 @@ package com.komzak.wedriveevaluationassignment.presentation.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+val primaryColor = Color(0xFF7f5efd)
 val primaryBackground = Color(0xFFFFFFFF)
 val secondaryBackground = Color(0xFFF7F8FC)
 val blackBorderColor = Color(0xFF0C0C0C)

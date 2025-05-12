@@ -1,35 +1,47 @@
 package com.komzak.wedriveevaluationassignment.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.komzak.wedriveevaluationassignment.presentation.ui.addcard.AddCardScreen
-import com.komzak.wedriveevaluationassignment.presentation.ui.wallet.WalletScreen
-
+import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
+import com.komzak.wedriveevaluationassignment.presentation.ui.dashboard.DashboardScreen
+import com.komzak.wedriveevaluationassignment.presentation.ui.login.LoginScreen
+import org.koin.compose.koinInject
 
 sealed class NavRoute(val route: String) {
     companion object {
-        const val WALLET = "wallet"
-        const val ADD_CARD = "add_card"
+        const val LOGIN = "login"
+        const val DASHBOARD = "dashboard"
     }
 
-    data object Wallet : NavRoute(WALLET)
-    data object AddCard : NavRoute(ADD_CARD)
+    data object Login : NavRoute(LOGIN)
+    data object Dashboard : NavRoute(DASHBOARD)
 }
 
-
 @Composable
-fun AppNavigation(modifier: Modifier) {
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    dataStoreHelper: DataStoreHelper = koinInject()
+) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = NavRoute.Wallet.route) {
-        composable(NavRoute.Wallet.route) {
-            WalletScreen(navController = navController)
-        }
+    val token by dataStoreHelper.getToken().collectAsStateWithLifecycle(initialValue = null)
+    val startDestination =
+        if (token != null) NavRoute.Dashboard.route else NavRoute.Login.route
 
-        composable(NavRoute.AddCard.route) { backStackEntry ->
-            AddCardScreen(navController)
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier
+    ) {
+        composable(NavRoute.Login.route) {
+            LoginScreen(navController = navController)
+        }
+        composable(NavRoute.Dashboard.route) {
+            DashboardScreen(navController = navController)
         }
     }
 }

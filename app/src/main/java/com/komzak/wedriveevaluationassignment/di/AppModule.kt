@@ -12,5 +12,4 @@ val appModule = module {
     single { ResourceProvider(androidContext()) }
     single { NetworkMonitor(androidContext()) }
     factoryOf(::DispatchersProvider)
-    single { DataStoreHelper(androidContext()) }
 }
