@@ -23,11 +23,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,9 +39,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,8 +56,7 @@ import com.komzak.wedriveevaluationassignment.presentation.theme.whiteColor
 import com.valentinilk.shimmer.shimmer
 import org.koin.compose.viewmodel.koinViewModel
 
-// Constants for consistent styling
-private object HomeScreenConstants {
+object ScreenConstants {
     val ScreenPadding = 16.dp
     val CardPadding = 8.dp
     val CardCornerRadius = 16.dp
@@ -62,7 +67,6 @@ private object HomeScreenConstants {
     val SpacingLarge = 24.dp
 }
 
-// Gradient background for the screen
 private val gradientBackground = Brush.verticalGradient(
     colors = listOf(
         secondaryBackground,
@@ -82,63 +86,95 @@ fun HomeScreen(
         onAddBalanceClick = { showDialog = true },
         navController = navController,
         showDialog = showDialog,
-        onDismissDialog = { showDialog = false }
+        onDismissDialog = { showDialog = false },
+        onRefresh = { viewModel.refresh() }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeContent(
     uiState: HomeUiState,
     onAddBalanceClick: () -> Unit,
     navController: NavController,
     showDialog: Boolean,
-    onDismissDialog: () -> Unit
+    onDismissDialog: () -> Unit,
+    onRefresh: () -> Unit
 ) {
-    Box(
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isLoading) {
+        isRefreshing = uiState.isLoading
+    }
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            onRefresh()
+        },
+        state = rememberPullToRefreshState(),
         modifier = Modifier
             .fillMaxSize()
             .background(gradientBackground)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(HomeScreenConstants.ScreenPadding)
+                .background(gradientBackground)
         ) {
-            // Header with profile and logout
-            HomeHeader(phone = uiState.phone)
-            Spacer(modifier = Modifier.height(HomeScreenConstants.SpacingLarge))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(ScreenConstants.ScreenPadding)
+            ) {
+                HomeHeader(
+                    phone = uiState.phone, showRefreshButton = uiState.errorMessage != null,
+                    onRefresh = onRefresh
+                )
+                Spacer(modifier = Modifier.height(ScreenConstants.SpacingLarge))
 
-            // Balance list
-            BalanceList(
-                isLoading = uiState.isLoading,
-                balances = uiState.allBalances
-            )
-        }
+                BalanceList(
+                    isLoading = uiState.isLoading,
+                    balances = uiState.allBalances
+                )
 
-        // Floating Action Button for adding balance
-        FloatingActionButton(
-            onClick = onAddBalanceClick,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(HomeScreenConstants.ScreenPadding),
-            shape = CircleShape,
-            containerColor = primaryColor,
-            contentColor = whiteColor
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_add),
-                contentDescription = "Add Balance",
-                modifier = Modifier.size(24.dp)
-            )
-        }
+                if (uiState.errorMessage != null) {
+                    Text(
+                        text = uiState.errorMessage ?: "Unknown error",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(ScreenConstants.SpacingMedium)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                }
+            }
 
-        // Dialog for selecting action
-        if (showDialog) {
-            SelectionDialog(
-                onDismiss = onDismissDialog,
-                onCreateOrder = { navController.navigate("create_order") },
-                onCreateExchange = { navController.navigate("create_exchange") }
-            )
+            FloatingActionButton(
+                onClick = onAddBalanceClick,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(ScreenConstants.ScreenPadding),
+                shape = CircleShape,
+                containerColor = primaryColor,
+                contentColor = whiteColor
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_add),
+                    contentDescription = "Add Balance",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            if (showDialog) {
+                SelectionDialog(
+                    onDismiss = onDismissDialog,
+                    onCreateOrder = { navController.navigate("create_order") },
+                    onCreateExchange = { navController.navigate("create_exchange") }
+                )
+            }
         }
     }
 }
@@ -180,16 +216,18 @@ private fun SelectionDialog(
 }
 
 @Composable
-private fun HomeHeader(phone: String) {
+private fun HomeHeader(
+    phone: String, showRefreshButton: Boolean,
+    onRefresh: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Profile section
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(HomeScreenConstants.SpacingSmall)
+            horizontalArrangement = Arrangement.spacedBy(ScreenConstants.SpacingSmall)
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_hisobchi),
@@ -197,7 +235,7 @@ private fun HomeHeader(phone: String) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .padding(2.dp)
-                    .size(HomeScreenConstants.AvatarSize)
+                    .size(ScreenConstants.AvatarSize)
             )
             Column {
                 Text(
@@ -215,6 +253,17 @@ private fun HomeHeader(phone: String) {
                 )
             }
         }
+
+        if (showRefreshButton) {
+            Icon(
+                painter = painterResource(R.drawable.ic_refresh),
+                contentDescription = "Retry",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onRefresh() },
+                tint = primaryColor
+            )
+        }
     }
 }
 
@@ -224,8 +273,8 @@ private fun BalanceList(
     balances: List<BalanceModel>
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(bottom = HomeScreenConstants.FabSize + HomeScreenConstants.ScreenPadding * 2),
-        verticalArrangement = Arrangement.spacedBy(HomeScreenConstants.CardPadding)
+        contentPadding = PaddingValues(bottom = ScreenConstants.FabSize + ScreenConstants.ScreenPadding * 2),
+        verticalArrangement = Arrangement.spacedBy(ScreenConstants.CardPadding)
     ) {
         if (isLoading) {
             items(5) {
@@ -244,32 +293,31 @@ private fun BalanceBoxShimmer() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(HomeScreenConstants.CardPadding)
+            .padding(ScreenConstants.CardPadding)
             .shimmer(),
-        shape = RoundedCornerShape(HomeScreenConstants.CardCornerRadius),
+        shape = RoundedCornerShape(ScreenConstants.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = whiteColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(HomeScreenConstants.SpacingMedium),
-            verticalArrangement = Arrangement.spacedBy(HomeScreenConstants.SpacingSmall),
-            horizontalAlignment = Alignment.Start
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = " ".repeat(20),
-                style = MaterialTheme.typography.bodyLarge,
-                color = primaryColor.copy(alpha = 0.3f)
-            )
-            Text(
                 text = " ".repeat(15),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = primaryColor.copy(alpha = 0.3f)
             )
             Text(
-                text = " ".repeat(10),
-                style = MaterialTheme.typography.bodyLarge,
+                text = " ".repeat(12),
+                style = MaterialTheme.typography.bodySmall,
+                color = primaryColor.copy(alpha = 0.3f)
+            )
+            Text(
+                text = " ".repeat(12),
+                style = MaterialTheme.typography.bodySmall,
                 color = primaryColor.copy(alpha = 0.3f)
             )
         }
@@ -281,11 +329,9 @@ private fun BalanceBox(balance: BalanceModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(HomeScreenConstants.CardPadding),
-        shape = RoundedCornerShape(HomeScreenConstants.CardCornerRadius),
-        colors = CardDefaults.cardColors(
-            containerColor = whiteColor
-        ),
+            .padding(ScreenConstants.CardPadding),
+        shape = RoundedCornerShape(ScreenConstants.CardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = whiteColor),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
             pressedElevation = 4.dp
@@ -302,57 +348,62 @@ private fun BalanceBox(balance: BalanceModel) {
                         )
                     )
                 )
-                .padding(HomeScreenConstants.SpacingMedium),
-            verticalArrangement = Arrangement.spacedBy(HomeScreenConstants.SpacingSmall),
-            horizontalAlignment = Alignment.Start
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HomeScreenConstants.SpacingSmall)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_balance),
                     contentDescription = "Balance Icon",
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(16.dp),
                     tint = primaryColor
                 )
                 Text(
-                    text = "Balans: ${balance.balance} ${balance.currencyType}",
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = "Balance: ${balance.balance} ${balance.currencyType}",
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = primaryColor
+                    color = primaryColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HomeScreenConstants.SpacingSmall)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_incoming),
-                    contentDescription = "Incoming Icon",
-                    modifier = Modifier.size(20.dp),
-                    tint = primaryColor
+                    contentDescription = "Income Icon",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color(0xFF4CAF50) // Green for income
                 )
                 Text(
-                    text = "Kirim: ${balance.outInLay} ${balance.currencyType}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = primaryColor.copy(alpha = 0.8f)
+                    text = "Income: +${balance.outInLay} ${balance.currencyType}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF4CAF50),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HomeScreenConstants.SpacingSmall)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outgoing),
-                    contentDescription = "Outgoing Icon",
-                    modifier = Modifier.size(20.dp),
-                    tint = primaryColor
+                    contentDescription = "Outcome Icon",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color(0xFFF44336) // Red for outcome
                 )
                 Text(
-                    text = "Chiqim: ${balance.inOutLay} ${balance.currencyType}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = primaryColor.copy(alpha = 0.8f)
+                    text = "Outcome: −${balance.inOutLay} ${balance.currencyType}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFF44336),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

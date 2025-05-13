@@ -32,6 +32,10 @@ class HomeViewModel(
         getAllBalance()
     }
 
+    fun refresh() {
+        getAllBalance()
+    }
+
     private fun getPhoneFromLocale() {
         viewModelScope.launch {
             dataStoreHelper.getPhoneNumber().collect { savedPhone ->

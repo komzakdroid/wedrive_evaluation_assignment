@@ -12,6 +12,19 @@ class DataStoreHelper(private val context: Context) {
     private val Context.dataStore by preferencesDataStore(name = "user_prefs")
     private val phoneNumberKey = stringPreferencesKey("phone_number")
     private val accessTokenKey = stringPreferencesKey("access_token")
+    private val userId = stringPreferencesKey("user_id")
+
+    suspend fun saveUID(uid: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[userId] = uid.toString()
+        }
+    }
+
+    fun getUID(): Flow<String?> {
+        return context.dataStore.data.map { prefs ->
+            prefs[userId]
+        }
+    }
 
     suspend fun saveToken(token: String) {
         context.dataStore.edit { prefs ->

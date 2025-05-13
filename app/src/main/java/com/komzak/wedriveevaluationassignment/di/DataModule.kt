@@ -6,13 +6,17 @@ import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApi
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApiImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetBalanceRecordsRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetBalanceRecordsRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUserRepository
 import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepository
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateUserUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetBalanceRecordsUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.LoginUserUseCase
+import com.komzak.wedriveevaluationassignment.presentation.ui.history.HistoryViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.home.HomeViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.login.LoginViewModel
 import org.koin.android.ext.koin.androidContext
@@ -29,15 +33,18 @@ val dataModule = module {
     singleOf(::CreateUserRepositoryImpl) { bind<CreateUserRepository>() }
     singleOf(::LoginUserRepositoryImpl) { bind<LoginUserRepository>() }
     singleOf(::GetAllBalanceRepositoryImpl) { bind<GetAllBalanceRepository>() }
+    singleOf(::GetBalanceRecordsRepositoryImpl) { bind<GetBalanceRecordsRepository>() }
 }
 
 val domainModule = module {
     factoryOf(::CreateUserUseCase)
     factoryOf(::LoginUserUseCase)
     factoryOf(::GetAllBalanceUseCase)
+    factoryOf(::GetBalanceRecordsUseCase)
 }
 
 val presentationModule = module {
     viewModel { LoginViewModel(get()) }
     viewModel { HomeViewModel(get(), get()) }
+    viewModel { HistoryViewModel(get(), get()) }
 }

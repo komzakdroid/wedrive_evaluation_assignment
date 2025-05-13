@@ -27,6 +27,7 @@ class LoginUserUseCase(
                 is DataResult.Success -> {
                     result.data.data?.token?.let { dataStoreHelper.saveToken(it) }
                     result.data.data?.user?.phone?.let { dataStoreHelper.savePhoneNumber(it) }
+                    result.data.data?.user?.id?.let { dataStoreHelper.saveUID(it) }
                     DataResult.Success(result.data.toDomain())
                 }
 
