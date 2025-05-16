@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.komzak.wedriveevaluationassignment.presentation.navigation.BottomNavItem
+import com.komzak.wedriveevaluationassignment.presentation.theme.brandColor
 import com.komzak.wedriveevaluationassignment.presentation.theme.greyBorderColor
 import com.komzak.wedriveevaluationassignment.presentation.theme.primaryBackground
 import com.komzak.wedriveevaluationassignment.presentation.theme.primaryColor
@@ -31,7 +32,7 @@ import com.komzak.wedriveevaluationassignment.presentation.theme.primaryTextColo
 import com.komzak.wedriveevaluationassignment.presentation.theme.secondaryBackground
 import com.komzak.wedriveevaluationassignment.presentation.ui.history.HistoryScreen
 import com.komzak.wedriveevaluationassignment.presentation.ui.home.HomeScreen
-import com.komzak.wedriveevaluationassignment.presentation.ui.orders.OrdersScreen
+import com.komzak.wedriveevaluationassignment.presentation.ui.orders.OrdersHistoryScreen
 import com.komzak.wedriveevaluationassignment.presentation.ui.profile.ProfileScreen
 
 @Composable
@@ -47,8 +48,8 @@ fun DashboardScreen(
     )
 
     Scaffold(
-        containerColor = secondaryBackground,
-        contentColor = secondaryBackground,
+        containerColor = brandColor,
+        contentColor = brandColor,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar(
@@ -97,7 +98,7 @@ fun DashboardScreen(
         ) {
             composable(BottomNavItem.Home.route) { HomeScreen(navController = navController) }
             composable(BottomNavItem.History.route) { HistoryScreen() }
-            composable(BottomNavItem.Orders.route) { OrdersScreen() }
+            composable(BottomNavItem.Orders.route) { OrdersHistoryScreen() }
             composable(BottomNavItem.Profile.route) { ProfileScreen(navController) }
         }
     }

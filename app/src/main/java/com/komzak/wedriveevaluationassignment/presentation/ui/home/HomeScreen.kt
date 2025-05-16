@@ -1,5 +1,8 @@
 package com.komzak.wedriveevaluationassignment.presentation.ui.home
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,11 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.komzak.wedriveevaluationassignment.R
@@ -79,6 +84,23 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
     navController: NavController
 ) {
+    // Access the current View to get the Window
+    val view = LocalView.current
+    val window = view.context.getActivity()?.window
+
+    // Change the status bar color
+    LaunchedEffect(Unit) {
+        window?.let {
+            // Set the status bar color to match the background (#4A90E2)
+            it.statusBarColor = 0xFF4A90E2.toInt()
+
+            // Make the status bar icons light (white) to be visible on the blue background
+            val controller = WindowCompat.getInsetsController(it, view)
+            controller.isAppearanceLightStatusBars =
+                false // Dark icons for light background; set to false for light icons on dark background
+        }
+    }
+
     var showDialog by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeContent(
@@ -87,8 +109,21 @@ fun HomeScreen(
         navController = navController,
         showDialog = showDialog,
         onDismissDialog = { showDialog = false },
-        onRefresh = { viewModel.refresh() }
+        onRefresh = { viewModel.refresh() },
+        check = { viewModel.createTransaction() },
     )
+}
+
+// Utility extension to get the Activity from a Context
+fun Context.getActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) {
+            return currentContext
+        }
+        currentContext = currentContext.baseContext
+    }
+    return null
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,7 +134,8 @@ private fun HomeContent(
     navController: NavController,
     showDialog: Boolean,
     onDismissDialog: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    check: () -> Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -116,12 +152,12 @@ private fun HomeContent(
         state = rememberPullToRefreshState(),
         modifier = Modifier
             .fillMaxSize()
-            .background(gradientBackground)
+            .background(Color(0xFF4A90E2)) // Solid blue background to match the image
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradientBackground)
+                .background(Color(0xFF4A90E2)) // Solid blue background
         ) {
             Column(
                 modifier = Modifier
@@ -172,7 +208,7 @@ private fun HomeContent(
                 SelectionDialog(
                     onDismiss = onDismissDialog,
                     onCreateOrder = { navController.navigate("create_order") },
-                    onCreateExchange = { navController.navigate("create_exchange") }
+                    onCreateExchange = { /*navController.navigate("create_exchange")*/ check() }
                 )
             }
         }
@@ -220,49 +256,57 @@ private fun HomeHeader(
     phone: String, showRefreshButton: Boolean,
     onRefresh: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(ScreenConstants.ScreenPadding)
+            .padding(ScreenConstants.SpacingMedium),
+        contentAlignment = Alignment.Center
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ScreenConstants.SpacingSmall)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_hisobchi),
-                contentDescription = "Profile Avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .padding(2.dp)
-                    .size(ScreenConstants.AvatarSize)
-            )
-            Column {
-                Text(
-                    text = "HISOBCHI",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = primaryColor
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(ScreenConstants.SpacingSmall)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_hisobchi),
+                    contentDescription = "Profile Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .size(ScreenConstants.AvatarSize)
                 )
-                Text(
-                    text = "Profil: $phone",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 14.sp,
-                    color = primaryColor.copy(alpha = 0.8f)
+                Column {
+                    Text(
+                        text = "HISOBCHI",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor
+                    )
+                    Text(
+                        text = "Profil: $phone",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 14.sp,
+                        color = primaryColor.copy(alpha = 0.8f)
+                    )
+                }
+            }
+
+            if (showRefreshButton) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_refresh),
+                    contentDescription = "Retry",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { onRefresh() },
+                    tint = primaryColor
                 )
             }
-        }
-
-        if (showRefreshButton) {
-            Icon(
-                painter = painterResource(R.drawable.ic_refresh),
-                contentDescription = "Retry",
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onRefresh() },
-                tint = primaryColor
-            )
         }
     }
 }

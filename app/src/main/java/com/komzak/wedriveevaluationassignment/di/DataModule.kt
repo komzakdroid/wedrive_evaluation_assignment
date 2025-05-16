@@ -8,6 +8,16 @@ import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBa
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetBalanceRecordsRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetBalanceRecordsRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionCreateRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionCreateRequestRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByBalanceIdRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByBalanceIdRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByDateRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByDateRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByStatusRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByStatusRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByUserIdRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.TransactionsByUserIdRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUserRepository
 import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepository
@@ -15,10 +25,16 @@ import com.komzak.wedriveevaluationassignment.data.repository.user.register.Crea
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateUserUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetBalanceRecordsUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByBalanceIdUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByDateUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByStatusUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByUserIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.LoginUserUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.TransactionCreateUseCase
 import com.komzak.wedriveevaluationassignment.presentation.ui.history.HistoryViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.home.HomeViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.login.LoginViewModel
+import com.komzak.wedriveevaluationassignment.presentation.ui.orders.OrdersHistoryViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -34,6 +50,12 @@ val dataModule = module {
     singleOf(::LoginUserRepositoryImpl) { bind<LoginUserRepository>() }
     singleOf(::GetAllBalanceRepositoryImpl) { bind<GetAllBalanceRepository>() }
     singleOf(::GetBalanceRecordsRepositoryImpl) { bind<GetBalanceRecordsRepository>() }
+    singleOf(::TransactionCreateRequestRepositoryImpl) { bind<TransactionCreateRepository>() }
+    singleOf(::TransactionsByBalanceIdRepositoryImpl) { bind<TransactionsByBalanceIdRepository>() }
+    singleOf(::TransactionsByDateRepositoryImpl) { bind<TransactionsByDateRepository>() }
+    singleOf(::TransactionsByStatusRepositoryImpl) { bind<TransactionsByStatusRepository>() }
+    singleOf(::TransactionsByUserIdRepositoryImpl) { bind<TransactionsByUserIdRepository>() }
+
 }
 
 val domainModule = module {
@@ -41,10 +63,16 @@ val domainModule = module {
     factoryOf(::LoginUserUseCase)
     factoryOf(::GetAllBalanceUseCase)
     factoryOf(::GetBalanceRecordsUseCase)
+    factoryOf(::TransactionCreateUseCase)
+    factoryOf(::GetTransactionsByBalanceIdUseCase)
+    factoryOf(::GetTransactionsByDateUseCase)
+    factoryOf(::GetTransactionsByStatusUseCase)
+    factoryOf(::GetTransactionsByUserIdUseCase)
 }
 
 val presentationModule = module {
     viewModel { LoginViewModel(get()) }
-    viewModel { HomeViewModel(get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { HistoryViewModel(get(), get()) }
+    viewModel { OrdersHistoryViewModel(get(), get(), get(), get(), get()) }
 }

@@ -18,10 +18,18 @@ val selectedColor = Color(0xFF1D1D1D)
 val unselectedColor = Color(0xFFECEDF1)
 val whiteColor = Color(0xFFFFFFFF)
 val bottomSheetColor = Color(0xFFF4F4F4)
+val brandColor = Color(0xFF1372F0)
 
 val cardBrush = Brush.horizontalGradient(
     colors = listOf(
         Color(0xFF1B1B1B),
         Color(0xFF3C3C3C)
+    )
+)
+
+val brandBrush = Brush.horizontalGradient(
+    colors = listOf(
+        Color(0xFF1372F0),
+        Color(0xFF6FADFF)
     )
 )
