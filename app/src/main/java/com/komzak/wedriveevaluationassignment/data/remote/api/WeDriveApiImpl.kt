@@ -24,6 +24,7 @@ class WeDriveApiImpl(private val client: HttpClient) : WeDriveApi {
         private const val REGISTER = "$BASE_URL/users/register"
         private const val LOGIN = "$BASE_URL/users/login"
         private const val ALL_BALANCE = "$BASE_URL/user/balances/all"
+        private const val ALL_BALANCE_BY_ID = "$BASE_URL/user/balances/user/"
         private const val BALANCE_RECORDS_BY_ID = "$BASE_URL/user/balances-records/user/"
         private const val TRANSACTION_CREATE = "$BASE_URL/user/transactions/create"
         private const val TRANSACTIONS_BY_BALANCE_ID = "$BASE_URL/user/transactions/all/balance/"
@@ -48,6 +49,12 @@ class WeDriveApiImpl(private val client: HttpClient) : WeDriveApi {
 
     override suspend fun getAllBalance(): AllBalanceResponse {
         return client.get(ALL_BALANCE) {
+        }.body()
+    }
+
+    override suspend fun getAllBalanceById(userId: Int): AllBalanceResponse {
+        return client.get("$ALL_BALANCE_BY_ID$userId") {
+            contentType(ContentType.Application.Json)
         }.body()
     }
 

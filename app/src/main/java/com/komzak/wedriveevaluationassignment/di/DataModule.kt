@@ -4,6 +4,8 @@ import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.data.remote.KtorClient
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApi
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApiImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceByIdRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceByIdRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetBalanceRecordsRepository
@@ -23,6 +25,7 @@ import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUs
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepository
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateUserUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetBalanceRecordsUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByBalanceIdUseCase
@@ -55,6 +58,7 @@ val dataModule = module {
     singleOf(::TransactionsByDateRepositoryImpl) { bind<TransactionsByDateRepository>() }
     singleOf(::TransactionsByStatusRepositoryImpl) { bind<TransactionsByStatusRepository>() }
     singleOf(::TransactionsByUserIdRepositoryImpl) { bind<TransactionsByUserIdRepository>() }
+    singleOf(::GetAllBalanceByIdRepositoryImpl) { bind<GetAllBalanceByIdRepository>() }
 
 }
 
@@ -68,6 +72,7 @@ val domainModule = module {
     factoryOf(::GetTransactionsByDateUseCase)
     factoryOf(::GetTransactionsByStatusUseCase)
     factoryOf(::GetTransactionsByUserIdUseCase)
+    factoryOf(::GetAllBalanceByIdUseCase)
 }
 
 val presentationModule = module {

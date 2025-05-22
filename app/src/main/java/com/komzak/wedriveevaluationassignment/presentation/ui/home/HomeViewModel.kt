@@ -6,7 +6,7 @@ import com.komzak.wedriveevaluationassignment.common.DataResult
 import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.TransactionRequest
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
-import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.TransactionCreateUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +23,7 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val getAllBalanceUseCase: GetAllBalanceUseCase,
+    private val getAllBalanceUseCase: GetAllBalanceByIdUseCase,
     private val transactionCreateUseCase: TransactionCreateUseCase,
     private val dataStoreHelper: DataStoreHelper
 ) : ViewModel() {
@@ -97,25 +97,29 @@ class HomeViewModel(
     private fun getAllBalance() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (val result = getAllBalanceUseCase()) {
-                is DataResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = true,
-                            allBalances = result.data,
-                            errorMessage = null
-                        )
-                    }
-                }
+            dataStoreHelper.getUID().collect { userId ->
+                if (userId != null) {
+                    when (val result = getAllBalanceUseCase(userId.toInt())) {
+                        is DataResult.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    isSuccess = true,
+                                    allBalances = result.data,
+                                    errorMessage = null
+                                )
+                            }
+                        }
 
-                is DataResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = false,
-                            errorMessage = result.error
-                        )
+                        is DataResult.Error -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    isSuccess = false,
+                                    errorMessage = result.error
+                                )
+                            }
+                        }
                     }
                 }
             }
