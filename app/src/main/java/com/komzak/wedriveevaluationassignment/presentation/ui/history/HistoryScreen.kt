@@ -1,10 +1,8 @@
 package com.komzak.wedriveevaluationassignment.presentation.ui.history
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -59,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.komzak.wedriveevaluationassignment.R
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceRecordModel
 import com.komzak.wedriveevaluationassignment.presentation.theme.primaryColor
+import com.komzak.wedriveevaluationassignment.presentation.ui.orders.ModernOrdersConstants
 import com.valentinilk.shimmer.shimmer
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.ZonedDateTime
@@ -463,41 +461,39 @@ private fun FilterChipButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) primaryColor else Color.White.copy(alpha = 0.8f)
-    val contentColor = if (isSelected) Color.White else primaryColor
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.03f else 1f, // Slightly less scale for compactness
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-    )
+    val backgroundColor =
+        if (isSelected) primaryColor else Color(0xFFE0E0E0) // Grey when unselected
+    val contentColor =
+        if (isSelected) Color.White else Color.DarkGray // Dark grey for text/icon when unselected
 
     Card(
         modifier = Modifier
-            .padding(4.dp)
-            .scale(scale),
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp), // Smaller corner radius
+            .padding(2.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(ModernOrdersConstants.FilterChipCornerRadius),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 3.dp else 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(
-                horizontal = ModernHistoryConstants.SpacingSmall,
-                vertical = ModernHistoryConstants.SpacingMedium
+                horizontal = ModernOrdersConstants.SpacingSmall,
+                vertical = ModernOrdersConstants.SpacingTiny
             ),
-            horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingTiny),
+            horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp), // Smaller icon
+                modifier = Modifier.size(14.dp),
                 tint = contentColor
             )
             Text(
+                modifier = Modifier.padding(ModernOrdersConstants.SpacingMedium),
                 text = label,
-                style = MaterialTheme.typography.bodyLarge, // Smaller typography
+                style = MaterialTheme.typography.bodyMedium,
                 color = contentColor,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
             )
         }
     }
@@ -583,24 +579,24 @@ private fun ModernHistoryItem(
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Black.copy(alpha = 0.6f)
                         )
-                    /*    if (record.serialNo != null) {
-                            Card(
-                                shape = RoundedCornerShape(6.dp), // Smaller corner radius
-                                colors = CardDefaults.cardColors(
-                                    containerColor = primaryColor.copy(alpha = 0.1f)
-                                )
-                            ) {
-                                Text(
-                                    text = "С/Н: ${record.serialNo}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = primaryColor,
-                                    modifier = Modifier.padding(
-                                        horizontal = ModernHistoryConstants.SpacingTiny,
-                                        vertical = ModernHistoryConstants.SpacingTiny
+                        /*    if (record.serialNo != null) {
+                                Card(
+                                    shape = RoundedCornerShape(6.dp), // Smaller corner radius
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = primaryColor.copy(alpha = 0.1f)
                                     )
-                                )
-                            }
-                        }*/
+                                ) {
+                                    Text(
+                                        text = "С/Н: ${record.serialNo}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = primaryColor,
+                                        modifier = Modifier.padding(
+                                            horizontal = ModernHistoryConstants.SpacingTiny,
+                                            vertical = ModernHistoryConstants.SpacingTiny
+                                        )
+                                    )
+                                }
+                            }*/
                     }
                 }
 

@@ -1,5 +1,6 @@
 package com.komzak.wedriveevaluationassignment.presentation.ui.orders
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -67,11 +69,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.komzak.wedriveevaluationassignment.R
 import com.komzak.wedriveevaluationassignment.domain.model.TransactionModel
@@ -83,19 +87,18 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 object ModernOrdersConstants {
-    val ScreenPadding = 20.dp
-    val CardPadding = 16.dp
-    val CardCornerRadius = 20.dp
-    val LargeCardCornerRadius = 24.dp
-    val FilterChipCornerRadius = 16.dp
-    val SpacingTiny = 4.dp
-    val SpacingSmall = 8.dp
-    val SpacingMedium = 16.dp
-    val SpacingLarge = 24.dp
-    val SpacingXLarge = 32.dp
+    val ScreenPadding = 12.dp
+    val CardPadding = 10.dp
+    val CardCornerRadius = 12.dp
+    val LargeCardCornerRadius = 16.dp
+    val FilterChipCornerRadius = 10.dp
+    val SpacingTiny = 2.dp
+    val SpacingSmall = 4.dp
+    val SpacingMedium = 8.dp
+    val SpacingLarge = 12.dp
+    val SpacingXLarge = 16.dp
 }
 
-// Modern gradient backgrounds
 private val modernOrdersBackground = Brush.verticalGradient(
     colors = listOf(
         Color(0xFF667eea),
@@ -134,10 +137,12 @@ fun OrdersHistoryScreen(
         uiState = uiState,
         onRefresh = { viewModel.refresh() },
         onUserIdSelected = { viewModel.updateUserId(it) },
+        onReceiverIdSelected = { viewModel.updateReceiverId(it) },
         onBalanceIdSelected = { viewModel.updateBalanceId(it) },
         onStatusSelected = { viewModel.updateStatus(it) },
         onDateRangeSelected = { from, to -> viewModel.updateDateRange(from, to) },
-        onClearFilters = { viewModel.clearFilters() }
+        onClearFilters = { viewModel.clearFilters() },
+        onCompleteTransaction = { serialNo -> viewModel.completeTransaction(serialNo) }
     )
 }
 
@@ -147,15 +152,21 @@ private fun ModernOrdersHistoryContent(
     uiState: OrdersHistoryUiState,
     onRefresh: () -> Unit,
     onUserIdSelected: (Int?) -> Unit,
+    onReceiverIdSelected: (Int?) -> Unit,
     onBalanceIdSelected: (Int?) -> Unit,
     onStatusSelected: (Long?) -> Unit,
     onDateRangeSelected: (String, String) -> Unit,
-    onClearFilters: () -> Unit
+    onClearFilters: () -> Unit,
+    onCompleteTransaction: (String) -> Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isSelectingFromDate by remember { mutableStateOf(true) }
     var showFiltersBottomSheet by remember { mutableStateOf(false) }
+    var isYuborilganSelected by remember { mutableStateOf(false) }
+    var isQabulQilinganSelected by remember { mutableStateOf(false) }
+    var showCompleteDialog by remember { mutableStateOf(false) }
+    var selectedTransactionSerialNo by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uiState.isLoading) {
         isRefreshing = uiState.isLoading
@@ -180,31 +191,51 @@ private fun ModernOrdersHistoryContent(
                 contentPadding = PaddingValues(
                     start = ModernOrdersConstants.ScreenPadding,
                     end = ModernOrdersConstants.ScreenPadding,
-                    top = ModernOrdersConstants.SpacingXLarge,
+                    top = ModernOrdersConstants.SpacingLarge,
                     bottom = ModernOrdersConstants.SpacingXLarge
                 ),
-                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingLarge)
+                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
             ) {
-                item {
-                    ModernOrdersHeader(phone = uiState.phone)
-                }
-
-                item {
-                    ModernFilterSection(
-                        uiState = uiState,
-                        onFiltersClick = { showFiltersBottomSheet = true },
-                        onClearFilters = onClearFilters
-                    )
-                }
-
                 item {
                     OrdersStatsCard(transactions = uiState.transactions)
                 }
 
                 item {
+                    ModernFilterSection(
+                        uiState = uiState,
+                        isYuborilganSelected = isYuborilganSelected,
+                        isQabulQilinganSelected = isQabulQilinganSelected,
+                        onYuborilganClick = {
+                            isYuborilganSelected = !isYuborilganSelected
+                            isQabulQilinganSelected = false
+                            if (isYuborilganSelected) {
+                                onUserIdSelected(uiState.availableUserIds.firstOrNull())
+                            } else {
+                                onClearFilters()
+                            }
+                        },
+                        onQabulQilinganClick = {
+                            isQabulQilinganSelected = !isQabulQilinganSelected
+                            isYuborilganSelected = false
+                            if (isQabulQilinganSelected) {
+                                onReceiverIdSelected(uiState.availableUserIds.firstOrNull())
+                            } else {
+                                onClearFilters()
+                            }
+                        },
+                        onFiltersClick = { showFiltersBottomSheet = true },
+                        onClearFilters = {
+                            isYuborilganSelected = false
+                            isQabulQilinganSelected = false
+                            onClearFilters()
+                        }
+                    )
+                }
+
+                item {
                     Text(
-                        text = "Transaction History",
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = "Транзакциялар тарихи",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         modifier = Modifier.padding(horizontal = ModernOrdersConstants.SpacingSmall)
@@ -219,7 +250,13 @@ private fun ModernOrdersHistoryContent(
                     items(uiState.transactions) { transaction ->
                         ModernTransactionCard(
                             transaction = transaction,
-                            modifier = Modifier.animateItemPlacement()
+                            modifier = Modifier.animateItemPlacement(),
+                            onClick = {
+                                if (transaction.status == 1L) {
+                                    selectedTransactionSerialNo = transaction.serialNo
+                                    showCompleteDialog = true
+                                }
+                            }
                         )
                     }
 
@@ -238,7 +275,6 @@ private fun ModernOrdersHistoryContent(
             }
         }
 
-        // Floating Action Button for Quick Actions
         AnimatedVisibility(
             visible = !isRefreshing,
             enter = scaleIn() + fadeIn(),
@@ -249,19 +285,19 @@ private fun ModernOrdersHistoryContent(
         ) {
             FloatingActionButton(
                 onClick = { showFiltersBottomSheet = true },
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(48.dp),
                 shape = CircleShape,
                 containerColor = Color(0xFF4CAF50),
                 contentColor = Color.White,
                 elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 12.dp
+                    defaultElevation = 6.dp,
+                    pressedElevation = 8.dp
                 )
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Filter",
-                    modifier = Modifier.size(28.dp)
+                    contentDescription = "Фильтр",
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -274,7 +310,11 @@ private fun ModernOrdersHistoryContent(
                 onBalanceIdSelected = onBalanceIdSelected,
                 onStatusSelected = onStatusSelected,
                 onDateRangeSelected = onDateRangeSelected,
-                onClearFilters = onClearFilters,
+                onClearFilters = {
+                    isYuborilganSelected = false
+                    isQabulQilinganSelected = false
+                    onClearFilters()
+                },
                 onDatePickerClick = { showDatePicker = true }
             )
         }
@@ -290,86 +330,92 @@ private fun ModernOrdersHistoryContent(
                 setIsSelectingFrom = { isSelectingFromDate = it }
             )
         }
+
+        if (showCompleteDialog && selectedTransactionSerialNo != null) {
+            CompleteTransactionDialog(
+                onDismiss = { showCompleteDialog = false },
+                onConfirm = {
+                    onCompleteTransaction(selectedTransactionSerialNo!!)
+                    showCompleteDialog = false
+                    selectedTransactionSerialNo = null
+                }
+            )
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ModernOrdersHeader(phone: String) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = ModernOrdersConstants.SpacingMedium),
-        shape = RoundedCornerShape(ModernOrdersConstants.LargeCardCornerRadius),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(glassmorphismCard)
-                .padding(ModernOrdersConstants.SpacingLarge)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+private fun CompleteTransactionDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Транзакцияни тугатиш",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = primaryColor
+            )
+        },
+        text = {
+            Text(
+                text = "Ушбу транзакцияни тугатмоқчимисиз?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black.copy(alpha = 0.8f)
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(contentColor = primaryColor)
             ) {
-                Column {
-                    Text(
-                        text = "Orders History",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Profile: $phone",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.3f),
-                                    Color.White.copy(alpha = 0.1f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_hisobchi),
-                        contentDescription = "Profile",
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                Text(
+                    text = "Тасдиқлаш",
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
-        }
-    }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+            ) {
+                Text(
+                    text = "Бекор қилиш",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(ModernOrdersConstants.LargeCardCornerRadius)
+    )
 }
 
 @Composable
 private fun ModernFilterSection(
     uiState: OrdersHistoryUiState,
+    isYuborilganSelected: Boolean,
+    isQabulQilinganSelected: Boolean,
+    onYuborilganClick: () -> Unit,
+    onQabulQilinganClick: () -> Unit,
     onFiltersClick: () -> Unit,
     onClearFilters: () -> Unit
 ) {
     val hasActiveFilters = uiState.selectedUserId != null ||
+            uiState.selectedReceiverId != null ||
             uiState.selectedBalanceId != null ||
             uiState.selectedStatus != null ||
-            uiState.selectedDateRange != null
+            uiState.selectedDateRange != null ||
+            isYuborilganSelected || isQabulQilinganSelected
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernOrdersConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
@@ -378,7 +424,7 @@ private fun ModernFilterSection(
                 .padding(ModernOrdersConstants.CardPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -386,8 +432,8 @@ private fun ModernFilterSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Filters",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "Фильтрлар",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = primaryColor
                     )
@@ -395,9 +441,10 @@ private fun ModernFilterSection(
                     if (hasActiveFilters) {
                         TextButton(onClick = onClearFilters) {
                             Text(
-                                "Clear All",
+                                "Барчасини тозалаш",
                                 color = Color(0xFFF44336),
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
@@ -409,59 +456,20 @@ private fun ModernFilterSection(
                 ) {
                     item {
                         FilterChipButton(
-                            label = "All Filters",
+                            label = "Юборилган",
                             icon = Icons.Default.Settings,
-                            isSelected = false,
-                            onClick = onFiltersClick
+                            isSelected = isYuborilganSelected,
+                            onClick = onYuborilganClick
                         )
                     }
 
-                    if (uiState.selectedUserId != null) {
-                        item {
-                            FilterChipButton(
-                                label = "User: ${uiState.selectedUserId}",
-                                icon = Icons.Default.Person,
-                                isSelected = true,
-                                onClick = { }
-                            )
-                        }
-                    }
-
-                    if (uiState.selectedBalanceId != null) {
-                        item {
-                            FilterChipButton(
-                                label = "Balance: ${uiState.selectedBalanceId}",
-                                icon = Icons.Default.Settings,
-                                isSelected = true,
-                                onClick = { }
-                            )
-                        }
-                    }
-
-                    if (uiState.selectedStatus != null) {
-                        item {
-                            FilterChipButton(
-                                label = when (uiState.selectedStatus) {
-                                    1L -> "Accepted"
-                                    2L -> "Completed"
-                                    else -> "Status"
-                                },
-                                icon = Icons.Default.CheckCircle,
-                                isSelected = true,
-                                onClick = { }
-                            )
-                        }
-                    }
-
-                    if (uiState.selectedDateRange != null) {
-                        item {
-                            FilterChipButton(
-                                label = "Date Range",
-                                icon = Icons.Default.DateRange,
-                                isSelected = true,
-                                onClick = { }
-                            )
-                        }
+                    item {
+                        FilterChipButton(
+                            label = "Қабул қилинган",
+                            icon = Icons.Default.Settings,
+                            isSelected = isQabulQilinganSelected,
+                            onClick = onQabulQilinganClick
+                        )
                     }
                 }
             }
@@ -476,19 +484,23 @@ private fun FilterChipButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) primaryColor else Color.White.copy(alpha = 0.8f)
-    val contentColor = if (isSelected) Color.White else primaryColor
+    val backgroundColor =
+        if (isSelected) primaryColor else Color(0xFFE0E0E0)
+    val contentColor =
+        if (isSelected) Color.White else Color.DarkGray
 
     Card(
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier
+            .padding(2.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(ModernOrdersConstants.FilterChipCornerRadius),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 3.dp else 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(
-                horizontal = ModernOrdersConstants.SpacingMedium,
-                vertical = ModernOrdersConstants.SpacingSmall
+                horizontal = ModernOrdersConstants.SpacingSmall,
+                vertical = ModernOrdersConstants.SpacingTiny
             ),
             horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny),
             verticalAlignment = Alignment.CenterVertically
@@ -496,12 +508,13 @@ private fun FilterChipButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(14.dp),
                 tint = contentColor
             )
             Text(
+                modifier = Modifier.padding(ModernOrdersConstants.SpacingMedium),
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.bodyMedium,
                 color = contentColor,
                 fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
             )
@@ -522,20 +535,20 @@ private fun OrdersStatsCard(transactions: List<TransactionModel>) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernOrdersConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(whiteGlassCard)
-                .padding(ModernOrdersConstants.SpacingLarge)
+                .padding(ModernOrdersConstants.SpacingMedium)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
             ) {
                 Text(
-                    text = "Statistics Overview",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Статистика кўриниши",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = primaryColor
                 )
@@ -545,25 +558,25 @@ private fun OrdersStatsCard(transactions: List<TransactionModel>) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     StatsItem(
-                        title = "Total",
+                        title = "Жами",
                         value = totalTransactions.toString(),
                         icon = Icons.Default.Settings,
                         color = Color(0xFF2196F3)
                     )
                     StatsItem(
-                        title = "Completed",
+                        title = "Тугалланган",
                         value = completedTransactions.toString(),
                         icon = Icons.Default.CheckCircle,
                         color = Color(0xFF4CAF50)
                     )
                     StatsItem(
-                        title = "Pending",
+                        title = "Кутилмоқда",
                         value = pendingTransactions.toString(),
                         icon = Icons.Default.Settings,
                         color = Color(0xFFFF9800)
                     )
                     StatsItem(
-                        title = "Amount",
+                        title = "Сумма",
                         value = String.format("%.1fK", totalAmount / 1000),
                         icon = Icons.Default.Settings,
                         color = Color(0xFF9C27B0)
@@ -583,11 +596,11 @@ private fun StatsItem(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+        verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(32.dp)
                 .clip(CircleShape)
                 .background(color.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
@@ -596,7 +609,7 @@ private fun StatsItem(
                 imageVector = icon,
                 contentDescription = title,
                 tint = color,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(16.dp)
             )
         }
         Text(
@@ -606,7 +619,7 @@ private fun StatsItem(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             color = color
         )
@@ -616,26 +629,27 @@ private fun StatsItem(
 @Composable
 private fun ModernTransactionCard(
     transaction: TransactionModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     val isIncome = transaction.type == 1L
     val amountColor = if (isIncome) Color(0xFF4CAF50) else Color(0xFFF44336)
     val amountPrefix = if (isIncome) "+" else "−"
     val iconResource = if (isIncome) R.drawable.ic_incoming else R.drawable.ic_outgoing
-
-    val formattedDate = transaction.createdAt?.let {
+    val context = LocalContext.current
+    val formattedDate = transaction.createdAt.let {
         try {
             val zonedDateTime = ZonedDateTime.parse(it)
-            zonedDateTime.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+            zonedDateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
         } catch (e: Exception) {
             it
         }
     } ?: ""
 
     val statusText = when (transaction.status) {
-        1L -> "Accepted"
-        2L -> "Completed"
-        else -> "Unknown"
+        1L -> "Кутилмоқда"
+        2L -> "Тугалланган"
+        else -> "Номаълум"
     }
 
     val statusColor = when (transaction.status) {
@@ -645,10 +659,12 @@ private fun ModernTransactionCard(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(ModernOrdersConstants.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
@@ -657,7 +673,7 @@ private fun ModernTransactionCard(
                 .padding(ModernOrdersConstants.CardPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -666,26 +682,26 @@ private fun ModernTransactionCard(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+                        horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(amountColor.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 painter = painterResource(iconResource),
-                                contentDescription = if (isIncome) "Income" else "Outcome",
-                                modifier = Modifier.size(24.dp),
+                                contentDescription = if (isIncome) "Кирим" else "Чиқим",
+                                modifier = Modifier.size(18.dp),
                                 tint = amountColor
                             )
                         }
                         Column {
                             Text(
                                 text = "$amountPrefix${transaction.amount} ${transaction.fromCurrencyType}",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = amountColor
                             )
@@ -698,7 +714,7 @@ private fun ModernTransactionCard(
                     }
 
                     Card(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.1f))
                     ) {
                         Text(
@@ -707,19 +723,20 @@ private fun ModernTransactionCard(
                             color = statusColor,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(
-                                horizontal = ModernOrdersConstants.SpacingSmall,
+                                horizontal = ModernOrdersConstants.SpacingTiny,
                                 vertical = ModernOrdersConstants.SpacingTiny
                             )
                         )
                     }
                 }
 
-                if (transaction.details?.isNotEmpty() == true) {
+                if (transaction.details.isNotEmpty() == true) {
                     Text(
+                        modifier = Modifier.padding(vertical = 4.dp),
                         text = transaction.details,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Black.copy(alpha = 0.8f),
-                        maxLines = 2,
+                        maxLines = 5,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -735,12 +752,12 @@ private fun ModernTransactionCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = "Receiver",
-                            modifier = Modifier.size(16.dp),
+                            contentDescription = "Қабул қилувчи",
+                            modifier = Modifier.size(14.dp),
                             tint = primaryColor
                         )
                         Text(
-                            text = "${transaction.receiverName}",
+                            text = transaction.receiverName,
                             style = MaterialTheme.typography.bodySmall,
                             color = primaryColor,
                             maxLines = 1,
@@ -748,21 +765,37 @@ private fun ModernTransactionCard(
                         )
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
+                    Box(
+                        modifier = Modifier.background(
+                            color = Color.Green.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = "Phone",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.Black.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = transaction.receiverPhone ?: "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Black.copy(alpha = 0.6f)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny),
+                            modifier = Modifier
+                                .padding(6.dp)
+                                .clickable {
+                                    val phoneNumber = transaction.receiverPhone
+                                    val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                                        data = "tel:$phoneNumber".toUri()
+                                    }
+                                    context.startActivity(dialIntent)
+                                }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Телефон",
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.Black.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = transaction.receiverPhone,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Black.copy(alpha = 0.6f)
+                            )
+                        }
                     }
                 }
             }
@@ -776,7 +809,7 @@ private fun ModernTransactionCardShimmer() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernOrdersConstants.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
@@ -785,14 +818,14 @@ private fun ModernTransactionCardShimmer() {
                 .padding(ModernOrdersConstants.CardPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
             ) {
                 repeat(4) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(if (it == 3) 0.6f else 0.8f)
-                            .height(16.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color.Black.copy(alpha = 0.1f))
                     )
                 }
@@ -807,34 +840,34 @@ private fun EmptyStateCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernOrdersConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(whiteGlassCard)
-                .padding(ModernOrdersConstants.SpacingXLarge),
+                .padding(ModernOrdersConstants.SpacingLarge),
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Settings,
-                    contentDescription = "No transactions",
-                    modifier = Modifier.size(64.dp),
+                    contentDescription = "Транзакциялар йўқ",
+                    modifier = Modifier.size(48.dp),
                     tint = Color.Black.copy(alpha = 0.3f)
                 )
                 Text(
-                    text = "No Transactions Found",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Транзакциялар топилмади",
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black.copy(alpha = 0.6f)
                 )
                 Text(
-                    text = "Try adjusting your filters or check back later",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Фильтрларни сўндиринг ёки кейинроқ қайта кўринг",
+                    style = MaterialTheme.typography.bodySmall,
                     color = Color.Black.copy(alpha = 0.4f),
                     textAlign = TextAlign.Center
                 )
@@ -855,17 +888,17 @@ private fun ErrorCard(errorMessage: String) {
                 .fillMaxWidth()
                 .padding(ModernOrdersConstants.CardPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+            horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = "Error",
+                contentDescription = "Хато",
                 tint = Color(0xFFFF9800),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(18.dp)
             )
             Text(
                 text = errorMessage,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFFE65100)
             )
         }
@@ -896,94 +929,92 @@ private fun ModernFiltersBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(ModernOrdersConstants.SpacingLarge),
-            verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingLarge)
+            verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
         ) {
-            // Bottom Sheet Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Filter Options",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = "Фильтр танловлари",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = primaryColor
                 )
 
                 TextButton(onClick = onClearFilters) {
                     Text(
-                        "Clear All",
+                        "Барчасини тозалаш",
                         color = Color(0xFFF44336),
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
 
-            // User ID Filter
             ModernFilterDropdown(
-                label = "Select User ID",
+                label = "Фойдаланувчи ID сини танланг",
                 selected = uiState.selectedUserId?.toString(),
                 items = uiState.availableUserIds.map { it.toString() },
                 onItemSelected = { onUserIdSelected(it?.toIntOrNull()) },
                 icon = Icons.Default.Person
             )
-
-            // Balance ID Filter
+            Spacer(modifier = Modifier.height(ModernOrdersConstants.SpacingSmall))
             ModernFilterDropdown(
-                label = "Select Balance ID",
+                label = "Баланс ID сини танланг",
                 selected = uiState.selectedBalanceId?.toString(),
                 items = uiState.availableBalanceIds.map { it.toString() },
                 onItemSelected = { onBalanceIdSelected(it?.toIntOrNull()) },
                 icon = Icons.Default.Settings
             )
+            Spacer(modifier = Modifier.height(ModernOrdersConstants.SpacingSmall))
 
-            // Status Filter
             ModernFilterDropdown(
-                label = "Select Status",
+                label = "Статусни танланг",
                 selected = when (uiState.selectedStatus) {
-                    1L -> "Accepted"
-                    2L -> "Completed"
+                    1L -> "Қабул қилинган"
+                    2L -> "Тугалланган"
                     else -> null
                 },
-                items = listOf("Accepted", "Completed"),
+                items = listOf("Кутилмоқда", "Тугалланган"),
                 onItemSelected = { selected ->
                     val statusCode = when (selected) {
-                        "Accepted" -> 1L
-                        "Completed" -> 2L
+                        "Кутилмоқда" -> 1L
+                        "Тугалланган" -> 2L
                         else -> null
                     }
                     onStatusSelected(statusCode)
                 },
                 icon = Icons.Default.CheckCircle
             )
+            Spacer(modifier = Modifier.height(ModernOrdersConstants.SpacingSmall))
 
-            // Date Range Filter
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(ModernOrdersConstants.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
-                border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
+                border = BorderStroke(0.5.dp, Color.Black.copy(alpha = 0.1f))
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(ModernOrdersConstants.CardPadding),
-                    verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+                    verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+                        horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
                     ) {
                         Icon(
                             imageVector = Icons.Default.DateRange,
-                            contentDescription = "Date Range",
-                            modifier = Modifier.size(20.dp),
+                            contentDescription = "Сана диапазони",
+                            modifier = Modifier.size(16.dp),
                             tint = primaryColor
                         )
                         Text(
-                            text = "Date Range",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = "Сана диапазони",
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium,
                             color = primaryColor
                         )
@@ -991,10 +1022,11 @@ private fun ModernFiltersBottomSheet(
 
                     Text(
                         text = uiState.selectedDateRange?.let { "${it.first} - ${it.second}" }
-                            ?: "No date range selected",
-                        style = MaterialTheme.typography.bodyMedium,
+                            ?: "Сана диапазони танланмаган",
+                        style = MaterialTheme.typography.bodySmall,
                         color = if (uiState.selectedDateRange == null) Color.Gray else Color.Black
                     )
+                    Spacer(modifier = Modifier.height(ModernOrdersConstants.SpacingSmall))
 
                     Button(
                         onClick = onDatePickerClick,
@@ -1005,15 +1037,18 @@ private fun ModernFiltersBottomSheet(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(ModernOrdersConstants.SpacingSmall))
-                        Text("Select Date Range")
+                        Spacer(modifier = Modifier.width(ModernOrdersConstants.SpacingTiny))
+                        Text(
+                            "Сана диапазонини танлаш",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(ModernOrdersConstants.SpacingLarge))
+            Spacer(modifier = Modifier.height(ModernOrdersConstants.SpacingMedium))
         }
     }
 }
@@ -1032,7 +1067,7 @@ private fun ModernFilterDropdown(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernOrdersConstants.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
-        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
+        border = BorderStroke(0.5.dp, Color.Black.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier
@@ -1043,32 +1078,32 @@ private fun ModernFilterDropdown(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
+                horizontalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingTiny)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(16.dp),
                     tint = primaryColor
                 )
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = primaryColor
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Expand",
-                    modifier = Modifier.size(20.dp),
+                    contentDescription = "Кенгайтириш",
+                    modifier = Modifier.size(16.dp),
                     tint = Color.Black.copy(alpha = 0.6f)
                 )
             }
 
             Text(
-                text = selected ?: "None selected",
-                style = MaterialTheme.typography.bodyMedium,
+                text = selected ?: "Ҳеч қайсиси танланмаган",
+                style = MaterialTheme.typography.bodySmall,
                 color = if (selected == null) Color.Gray else Color.Black
             )
         }
@@ -1083,8 +1118,8 @@ private fun ModernFilterDropdown(
             DropdownMenuItem(
                 text = {
                     Text(
-                        "None",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "Ҳеч қайсиси",
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
                 },
@@ -1098,7 +1133,7 @@ private fun ModernFilterDropdown(
                     text = {
                         Text(
                             item,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = Color.Black
                         )
                     },
@@ -1136,7 +1171,6 @@ private fun ModernDateRangePickerDialog(
                     if (isSelectingFrom) {
                         fromDate = selectedDate
                         setIsSelectingFrom(false)
-                        // Reset the picker state for "to" date selection
                     } else {
                         toDate = selectedDate
                         if (fromDate != null && toDate != null) {
@@ -1154,9 +1188,10 @@ private fun ModernDateRangePickerDialog(
                 colors = ButtonDefaults.textButtonColors(contentColor = primaryColor)
             ) {
                 Text(
-                    if (isSelectingFrom && fromDate == null) "Select From Date"
-                    else if (!isSelectingFrom && toDate == null) "Select To Date"
-                    else "Confirm"
+                    if (isSelectingFrom && fromDate == null) "Бошланғич санани танланг"
+                    else if (!isSelectingFrom && toDate == null) "Тугатувчи санани танланг"
+                    else "Тасдиқлаш",
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
         },
@@ -1165,25 +1200,25 @@ private fun ModernDateRangePickerDialog(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
             ) {
-                Text("Cancel")
+                Text("Бекор қилиш", style = MaterialTheme.typography.labelMedium)
             }
         },
         shape = RoundedCornerShape(ModernOrdersConstants.LargeCardCornerRadius)
     ) {
         Column(
             modifier = Modifier.padding(ModernOrdersConstants.CardPadding),
-            verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingMedium)
+            verticalArrangement = Arrangement.spacedBy(ModernOrdersConstants.SpacingSmall)
         ) {
             Card(
                 shape = RoundedCornerShape(ModernOrdersConstants.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = primaryColor.copy(alpha = 0.1f))
             ) {
                 Text(
-                    text = if (isSelectingFrom) "Select Start Date" else "Select End Date",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = if (isSelectingFrom) "Бошланғич санани танланг" else "Тугатувчи санани танланг",
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = primaryColor,
-                    modifier = Modifier.padding(ModernOrdersConstants.SpacingMedium)
+                    modifier = Modifier.padding(ModernOrdersConstants.SpacingSmall)
                 )
             }
 
@@ -1194,20 +1229,20 @@ private fun ModernDateRangePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "From: ${
+                        text = "Дан: ${
                             Instant.ofEpochMilli(fromDate!!).atZone(ZoneId.systemDefault())
                                 .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
                         }",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Black.copy(alpha = 0.8f)
                     )
                     if (!isSelectingFrom && toDate != null) {
                         Text(
-                            text = "To: ${
+                            text = "Га: ${
                                 Instant.ofEpochMilli(toDate!!).atZone(ZoneId.systemDefault())
                                     .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
                             }",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = Color.Black.copy(alpha = 0.8f)
                         )
                     }

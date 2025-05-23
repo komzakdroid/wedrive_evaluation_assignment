@@ -4,7 +4,10 @@ import com.komzak.wedriveevaluationassignment.data.remote.model.request.Transact
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.UserLoginRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.UserRegisterRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllBalanceResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllCitiesResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllUsersResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.BalanceRecordsResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.CompleteActionResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.TransactionCreateResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.TransactionResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.UserLoginResponse
@@ -13,7 +16,6 @@ import com.komzak.wedriveevaluationassignment.data.remote.model.response.UserReg
 interface WeDriveApi {
     suspend fun register(request: UserRegisterRequest): UserRegisterResponse
     suspend fun login(request: UserLoginRequest): UserLoginResponse
-
     suspend fun getAllBalance(): AllBalanceResponse
     suspend fun getAllBalanceById(userId: Int): AllBalanceResponse
     suspend fun getAllBalanceRecordsById(balanceId: Int): BalanceRecordsResponse
@@ -21,6 +23,10 @@ interface WeDriveApi {
     suspend fun createTransaction(request: TransactionRequest): TransactionCreateResponse
     suspend fun getTransactionsByBalanceId(balanceId: Int): TransactionResponse
     suspend fun getTransactionsByUserId(userId: Int): TransactionResponse
+    suspend fun getTransactionsByReceiverId(receiverId: Int): TransactionResponse
     suspend fun getTransactionsByStatus(status: String): TransactionResponse
     suspend fun getTransactionsByDate(date: String): TransactionResponse
+    suspend fun getAllUsers(): AllUsersResponse
+    suspend fun getAllCities(): AllCitiesResponse
+    suspend fun completeActionById(actionId: String): CompleteActionResponse
 }

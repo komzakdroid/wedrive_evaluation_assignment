@@ -5,8 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.komzak.wedriveevaluationassignment.common.DataResult
 import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.domain.model.TransactionModel
+import com.komzak.wedriveevaluationassignment.domain.usecase.CompleteActionByIdUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllUsersUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByBalanceIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByDateUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByReceiverIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByStatusUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByUserIdUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,18 +25,23 @@ data class OrdersHistoryUiState(
     val errorMessage: String? = null,
     val transactions: List<TransactionModel> = emptyList(),
     val selectedUserId: Int? = null,
+    val selectedReceiverId: Int? = null,
     val selectedBalanceId: Int? = null,
     val selectedStatus: Long? = null,
     val selectedDateRange: Pair<String, String>? = null,
     val availableUserIds: List<Int> = emptyList(),
-    val availableBalanceIds: List<Int> = emptyList()
+    val availableBalanceIds: List<Int?> = emptyList()
 )
 
 class OrdersHistoryViewModel(
     private val getTransactionsByBalanceIdUseCase: GetTransactionsByBalanceIdUseCase,
     private val getTransactionsByUserIdUseCase: GetTransactionsByUserIdUseCase,
+    private val getTransactionsByReceiverIdUseCase: GetTransactionsByReceiverIdUseCase,
     private val getTransactionsByStatusUseCase: GetTransactionsByStatusUseCase,
     private val getTransactionsByDateUseCase: GetTransactionsByDateUseCase,
+    private val getAllUsersUseCase: GetAllUsersUseCase,
+    private val getAllBalancesUseCase: GetAllBalanceUseCase,
+    private val completeActionByIdUseCase: CompleteActionByIdUseCase,
     private val dataStoreHelper: DataStoreHelper
 ) : ViewModel() {
 
@@ -53,6 +62,20 @@ class OrdersHistoryViewModel(
         _uiState.update {
             it.copy(
                 selectedUserId = userId,
+                selectedReceiverId = null,
+                selectedBalanceId = null,
+                selectedStatus = null,
+                selectedDateRange = null
+            )
+        }
+        fetchTransactions()
+    }
+
+    fun updateReceiverId(receiverId: Int?) {
+        _uiState.update {
+            it.copy(
+                selectedReceiverId = receiverId,
+                selectedUserId = null,
                 selectedBalanceId = null,
                 selectedStatus = null,
                 selectedDateRange = null
@@ -66,6 +89,7 @@ class OrdersHistoryViewModel(
             it.copy(
                 selectedBalanceId = balanceId,
                 selectedUserId = null,
+                selectedReceiverId = null,
                 selectedStatus = null,
                 selectedDateRange = null
             )
@@ -78,6 +102,7 @@ class OrdersHistoryViewModel(
             it.copy(
                 selectedStatus = status,
                 selectedUserId = null,
+                selectedReceiverId = null,
                 selectedBalanceId = null,
                 selectedDateRange = null
             )
@@ -90,6 +115,7 @@ class OrdersHistoryViewModel(
             it.copy(
                 selectedDateRange = from to to,
                 selectedUserId = null,
+                selectedReceiverId = null,
                 selectedBalanceId = null,
                 selectedStatus = null
             )
@@ -101,12 +127,40 @@ class OrdersHistoryViewModel(
         _uiState.update {
             it.copy(
                 selectedUserId = null,
+                selectedReceiverId = null,
                 selectedBalanceId = null,
                 selectedStatus = null,
                 selectedDateRange = null
             )
         }
         fetchTransactions()
+    }
+
+    fun completeTransaction(serialNo: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = completeActionByIdUseCase(serialNo)
+            when (result) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
+                    fetchTransactions() // Refresh transactions after completion
+                }
+
+                is DataResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.error
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun getPhoneFromLocale() {
@@ -120,13 +174,25 @@ class OrdersHistoryViewModel(
     }
 
     private fun fetchFilterData() {
-        // TODO: Fetch dynamic user IDs and balance IDs from API or local storage
-        // Placeholder implementation
         viewModelScope.launch {
+            // Fetch user IDs
+            val userResult = getAllUsersUseCase()
+            val userIds = when (userResult) {
+                is DataResult.Success -> userResult.data.map { it.id }
+                is DataResult.Error -> emptyList()
+            }
+
+            // Fetch balance IDs
+            val balanceResult = getAllBalancesUseCase()
+            val balanceIds = when (balanceResult) {
+                is DataResult.Success -> balanceResult.data.map { it.id }
+                is DataResult.Error -> emptyList()
+            }
+
             _uiState.update {
                 it.copy(
-                    availableUserIds = listOf(1, 2, 3), // Replace with actual data
-                    availableBalanceIds = listOf(101, 102, 103) // Replace with actual data
+                    availableUserIds = userIds,
+                    availableBalanceIds = balanceIds
                 )
             }
         }
@@ -139,8 +205,7 @@ class OrdersHistoryViewModel(
             val result = when {
                 _uiState.value.selectedDateRange != null -> {
                     val (from, to) = _uiState.value.selectedDateRange!!
-                    // Assuming API accepts a single date or range in a specific format
-                    getTransactionsByDateUseCase("$from-$to") // Adjust format based on API
+                    getTransactionsByDateUseCase("$from-$to")
                 }
 
                 _uiState.value.selectedStatus != null -> {
@@ -149,6 +214,10 @@ class OrdersHistoryViewModel(
 
                 _uiState.value.selectedBalanceId != null -> {
                     getTransactionsByBalanceIdUseCase(_uiState.value.selectedBalanceId!!)
+                }
+
+                _uiState.value.selectedReceiverId != null -> {
+                    getTransactionsByReceiverIdUseCase(_uiState.value.selectedReceiverId!!)
                 }
 
                 _uiState.value.selectedUserId != null -> {
