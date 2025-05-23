@@ -21,7 +21,7 @@ class GetTransactionsByDateUseCase(
     ): DataResult<List<TransactionModel>, String> {
         return withContext(dispatcher.io) {
             when (val result = repository.getTransactionsByDate(date)) {
-                is DataResult.Success -> DataResult.Success(result.data.data.map { it.toDomain() })
+                is DataResult.Success -> DataResult.Success(result.data.data?.map { it.toDomain() }?:emptyList())
                 is DataResult.Error -> mapErrorToMessage(result.error, resource)
             }
         }

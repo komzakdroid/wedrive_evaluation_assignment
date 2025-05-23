@@ -7,6 +7,8 @@ import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.TransactionRequest
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceRecordModel
+import com.komzak.wedriveevaluationassignment.domain.usecase.CreateBalanceRecordsUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.CreateTransactionUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceRecordsByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.TransactionCreateUseCase
@@ -107,6 +109,7 @@ class HomeViewModel(
                         )
                     }
                 }
+
                 is DataResult.Error -> {
                     _uiState.update {
                         it.copy(errorMessage = result.error)

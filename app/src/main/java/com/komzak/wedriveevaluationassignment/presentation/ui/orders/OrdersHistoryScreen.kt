@@ -528,7 +528,7 @@ private fun OrdersStatsCard(transactions: List<TransactionModel>) {
     val completedTransactions = transactions.count { it.status == 2L }
     val pendingTransactions = transactions.count { it.status == 1L }
     val totalAmount = transactions.fold(0.0) { acc, transaction ->
-        acc + transaction.amount.toDouble()
+        transaction.amount?.toDouble()?.let { acc + it } ?: 0.0
     }
 
     Card(
@@ -730,15 +730,17 @@ private fun ModernTransactionCard(
                     }
                 }
 
-                if (transaction.details.isNotEmpty() == true) {
-                    Text(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        text = transaction.details,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Black.copy(alpha = 0.8f),
-                        maxLines = 5,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                transaction.details?.let {
+                    if (it.isNotEmpty() == true) {
+                        Text(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            text = transaction.details,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            maxLines = 5,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Row(
@@ -756,13 +758,15 @@ private fun ModernTransactionCard(
                             modifier = Modifier.size(14.dp),
                             tint = primaryColor
                         )
-                        Text(
-                            text = transaction.receiverName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = primaryColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        transaction.receiverName?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = primaryColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
 
                     Box(
@@ -790,11 +794,13 @@ private fun ModernTransactionCard(
                                 modifier = Modifier.size(14.dp),
                                 tint = Color.Black.copy(alpha = 0.6f)
                             )
-                            Text(
-                                text = transaction.receiverPhone,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Black.copy(alpha = 0.6f)
-                            )
+                            transaction.receiverPhone?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Black.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
                 }

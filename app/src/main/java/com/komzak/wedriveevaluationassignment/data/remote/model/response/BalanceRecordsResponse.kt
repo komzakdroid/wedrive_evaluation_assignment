@@ -11,7 +11,7 @@ data class BalanceRecordsResponse(
 @Serializable
 data class BalanceRecordsItemResponse(
     val id: Int?,
-    val amount: Double?,
+    val amount: Int?,
     @SerialName("serial_no") val serialNo: String?,
     @SerialName("user_id") val userId: Int?,
     @SerialName("balance_id") val balanceId: Int?,

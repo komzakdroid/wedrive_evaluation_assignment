@@ -21,7 +21,7 @@ class GetTransactionsByReceiverIdUseCase(
     ): DataResult<List<TransactionModel>, String> {
         return withContext(dispatcher.io) {
             when (val result = repository.getTransactionsByReceiverId(receiverId)) {
-                is DataResult.Success -> DataResult.Success(result.data.data.map { it.toDomain() })
+                is DataResult.Success -> DataResult.Success(result.data.data?.map { it.toDomain() }?:emptyList())
                 is DataResult.Error -> mapErrorToMessage(result.error, resource)
             }
         }

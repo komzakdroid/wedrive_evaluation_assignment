@@ -78,6 +78,7 @@ import androidx.navigation.NavController
 import com.komzak.wedriveevaluationassignment.R
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceRecordModel
+import com.komzak.wedriveevaluationassignment.presentation.navigation.NavRoute
 import com.komzak.wedriveevaluationassignment.presentation.theme.primaryColor
 import com.komzak.wedriveevaluationassignment.presentation.ui.dashboard.getActivity
 import com.valentinilk.shimmer.shimmer
@@ -334,8 +335,8 @@ private fun CompactHomeContent(
         if (showDialog) {
             CompactSelectionDialog(
                 onDismiss = onDismissDialog,
-                onCreateOrder = { navController.navigate("create_order") },
-                onCreateExchange = check
+                onCreateOrder = { navController.navigate(NavRoute.BalanceRecords.route) },
+                onCreateExchange = { navController.navigate(NavRoute.CreateTransaction.route) }
             )
         }
     }
@@ -641,9 +642,7 @@ private fun EnhancedBalanceRecordCard(
                     verticalArrangement = Arrangement.spacedBy(CompactScreenConstants.SpacingTiny)
                 ) {
                     Text(
-                        text = "${if (isPositive) "+" else "-"}${
-                            String.format("%.2f", kotlin.math.abs(record.amount ?: 0.0))
-                        }",
+                        text = "${if (isPositive) "+" else "-"}${record.amount}",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontSize = 18.sp
                         ),

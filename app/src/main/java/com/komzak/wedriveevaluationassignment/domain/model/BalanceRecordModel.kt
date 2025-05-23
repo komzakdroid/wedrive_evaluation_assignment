@@ -4,7 +4,7 @@ import com.komzak.wedriveevaluationassignment.data.remote.model.response.Balance
 
 data class BalanceRecordModel(
     val id: Int? = null,
-    val amount: Double? = null,
+    val amount: Int? = null,
     val serialNo: String? = null,
     val userId: Int? = null,
     val balanceId: Int? = null,

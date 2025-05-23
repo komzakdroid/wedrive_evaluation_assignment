@@ -21,7 +21,10 @@ class GetTransactionsByBalanceIdUseCase(
     ): DataResult<List<TransactionModel>, String> {
         return withContext(dispatcher.io) {
             when (val result = repository.getTransactionsByBalanceId(balanceId)) {
-                is DataResult.Success -> DataResult.Success(result.data.data.map { it.toDomain() })
+                is DataResult.Success -> DataResult.Success(
+                    result.data.data?.map { it.toDomain() } ?: emptyList()
+                )
+
                 is DataResult.Error -> mapErrorToMessage(result.error, resource)
             }
         }

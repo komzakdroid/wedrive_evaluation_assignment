@@ -55,6 +55,8 @@ import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsBySt
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByUserIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.LoginUserUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.TransactionCreateUseCase
+import com.komzak.wedriveevaluationassignment.presentation.ui.createbalancerecords.CreateBalanceRecordsViewModel
+import com.komzak.wedriveevaluationassignment.presentation.ui.createtransaction.CreateTransactionViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.history.HistoryViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.home.HomeViewModel
 import com.komzak.wedriveevaluationassignment.presentation.ui.login.LoginViewModel
@@ -115,6 +117,8 @@ val presentationModule = module {
     viewModel { LoginViewModel(get()) }
     viewModel { HomeViewModel(get(), get(), get(), get()) }
     viewModel { HistoryViewModel(get(), get()) }
+    viewModel { CreateBalanceRecordsViewModel(get(), get(), get()) }
+    viewModel { CreateTransactionViewModel(get(), get(), get(), get()) }
     viewModel {
         OrdersHistoryViewModel(
             get(),

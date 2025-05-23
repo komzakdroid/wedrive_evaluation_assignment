@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateBalanceRecordsRequest(
-    val amount: Double,
+    val amount: Int,
     @SerialName("user_id") val userId: Int,
     @SerialName("balance_id") val balanceId: Int,
     @SerialName("company_id") val companyId: Int,
