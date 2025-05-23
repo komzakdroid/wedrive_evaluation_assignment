@@ -10,44 +10,44 @@ data class TransactionCreateResponse(
 
 @Serializable
 data class TransactionResponse(
-    val data: List<TransactionItemResponse>,
+    val data: List<TransactionItemResponse>?,
 )
 
 @Serializable
 data class TransactionItemResponse(
-    val id: Long,
-    val amount: Long,
+    val id: Long?,
+    val amount: Long?,
     @SerialName("service_fee")
-    val serviceFee: Long,
+    val serviceFee: Long?,
     @SerialName("from_currency_type_id")
-    val fromCurrencyTypeId: Long,
+    val fromCurrencyTypeId: Long?,
     @SerialName("to_currency_type_id")
-    val toCurrencyTypeId: Long,
+    val toCurrencyTypeId: Long?,
     @SerialName("sender_id")
-    val senderId: Long,
+    val senderId: Long?,
     @SerialName("serial_no")
-    val serialNo: String,
+    val serialNo: String?,
     @SerialName("receiver_id")
-    val receiverId: Long,
+    val receiverId: Long?,
     @SerialName("from_city_id")
-    val fromCityId: Long,
+    val fromCityId: Long?,
     @SerialName("to_city_id")
-    val toCityId: Long,
+    val toCityId: Long?,
     @SerialName("receiver_name")
-    val receiverName: String,
+    val receiverName: String?,
     @SerialName("receiver_phone")
-    val receiverPhone: String,
-    val details: String,
-    val type: Long,
+    val receiverPhone: String?,
+    val details: String?,
+    val type: Long?,
     @SerialName("from_currency_type")
-    val fromCurrencyType: String,
+    val fromCurrencyType: String?,
     @SerialName("to_currency_type")
-    val toCurrencyType: String,
-    val status: Long,
+    val toCurrencyType: String?,
+    val status: Long?,
     @SerialName("company_id")
-    val companyId: Long,
+    val companyId: Long?,
     @SerialName("balance_id")
-    val balanceId: Long,
+    val balanceId: Long?,
     @SerialName("created_at")
-    val createdAt: String,
+    val createdAt: String?,
 )

@@ -1,5 +1,7 @@
 package com.komzak.wedriveevaluationassignment.data.remote.api
 
+import com.komzak.wedriveevaluationassignment.data.remote.model.request.CreateBalanceRecordsRequest
+import com.komzak.wedriveevaluationassignment.data.remote.model.request.CreateTransactionRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.TransactionRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.UserLoginRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.UserRegisterRequest
@@ -8,6 +10,8 @@ import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllCiti
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllUsersResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.BalanceRecordsResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.CompleteActionResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.CreateBalanceRecordsResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.CreateTransactionResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.TransactionCreateResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.TransactionResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.UserLoginResponse
@@ -29,4 +33,7 @@ interface WeDriveApi {
     suspend fun getAllUsers(): AllUsersResponse
     suspend fun getAllCities(): AllCitiesResponse
     suspend fun completeActionById(actionId: String): CompleteActionResponse
+    suspend fun createBalanceRecords(request: CreateBalanceRecordsRequest): CreateBalanceRecordsResponse
+    suspend fun createTransaction(request: CreateTransactionRequest): CreateTransactionResponse
 }
+

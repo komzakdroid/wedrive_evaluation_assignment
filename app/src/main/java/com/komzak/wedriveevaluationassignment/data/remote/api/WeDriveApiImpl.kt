@@ -1,5 +1,7 @@
 package com.komzak.wedriveevaluationassignment.data.remote.api
 
+import com.komzak.wedriveevaluationassignment.data.remote.model.request.CreateBalanceRecordsRequest
+import com.komzak.wedriveevaluationassignment.data.remote.model.request.CreateTransactionRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.TransactionRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.UserLoginRequest
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.UserRegisterRequest
@@ -8,6 +10,8 @@ import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllCiti
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.AllUsersResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.BalanceRecordsResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.CompleteActionResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.CreateBalanceRecordsResponse
+import com.komzak.wedriveevaluationassignment.data.remote.model.response.CreateTransactionResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.TransactionCreateResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.TransactionResponse
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.UserLoginResponse
@@ -39,6 +43,8 @@ class WeDriveApiImpl(private val client: HttpClient) : WeDriveApi {
         private const val TRANSACTIONS_BY_STATUS = "$BASE_URL/user/transactions/all/active/"
         private const val TRANSACTIONS_BY_DATE = "$BASE_URL/user/transactions/all/date/"
         private const val COMPLETE_ACTION_BY_ID = "$BASE_URL/user/transactions/complete/"
+        private const val CREATE_TRANSACTION = "$BASE_URL/user/transactions/create"
+        private const val CREATE_BALANCE_RECORDS = "$BASE_URL/user/balances-records"
     }
 
     override suspend fun register(request: UserRegisterRequest): UserRegisterResponse {
@@ -79,6 +85,20 @@ class WeDriveApiImpl(private val client: HttpClient) : WeDriveApi {
     override suspend fun completeActionById(actionId: String): CompleteActionResponse {
         return client.get("$COMPLETE_ACTION_BY_ID$actionId") {
             contentType(ContentType.Application.Json)
+        }.body()
+    }
+
+    override suspend fun createBalanceRecords(request: CreateBalanceRecordsRequest): CreateBalanceRecordsResponse {
+        return client.post(CREATE_BALANCE_RECORDS) {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+    }
+
+    override suspend fun createTransaction(request: CreateTransactionRequest): CreateTransactionResponse {
+        return client.post(CREATE_TRANSACTION) {
+            contentType(ContentType.Application.Json)
+            setBody(request)
         }.body()
     }
 
@@ -130,6 +150,7 @@ class WeDriveApiImpl(private val client: HttpClient) : WeDriveApi {
             contentType(ContentType.Application.Json)
         }.body()
     }
+
 
     /*
      override suspend fun updateMethod(request: MethodRequest, phone: String): UserResponse {

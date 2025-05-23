@@ -6,6 +6,10 @@ import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApi
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApiImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.CompleteActionByIdRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.CompleteActionByIdRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.CreateBalanceRecordsRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.CreateBalanceRecordsRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.CreateTransactionRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.CreateTransactionRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceByIdRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceByIdRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRecordsByIdRepository
@@ -35,6 +39,8 @@ import com.komzak.wedriveevaluationassignment.data.repository.user.login.LoginUs
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepository
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.domain.usecase.CompleteActionByIdUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.CreateBalanceRecordsUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.CreateTransactionUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateUserUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceRecordsByIdUseCase
@@ -80,6 +86,8 @@ val dataModule = module {
     singleOf(::GetAllUsersRepositoryImpl) { bind<GetAllUsersRepository>() }
     singleOf(::GetAllCitiesRepositoryImpl) { bind<GetAllCitiesRepository>() }
     singleOf(::CompleteActionByIdRepositoryImpl) { bind<CompleteActionByIdRepository>() }
+    singleOf(::CreateBalanceRecordsRepositoryImpl) { bind<CreateBalanceRecordsRepository>() }
+    singleOf(::CreateTransactionRepositoryImpl) { bind<CreateTransactionRepository>() }
 }
 
 val domainModule = module {
@@ -99,6 +107,8 @@ val domainModule = module {
     factoryOf(::GetAllCitiesUseCase)
     factoryOf(::GetAllBalanceByIdUseCase)
     factoryOf(::CompleteActionByIdUseCase)
+    factoryOf(::CreateBalanceRecordsUseCase)
+    factoryOf(::CreateTransactionUseCase)
 }
 
 val presentationModule = module {

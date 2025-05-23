@@ -3,16 +3,16 @@ package com.komzak.wedriveevaluationassignment.domain.model
 import com.komzak.wedriveevaluationassignment.data.remote.model.response.BalanceRecordsItemResponse
 
 data class BalanceRecordModel(
-    val id: Int?,
-    val amount: Double?,
-    val serialNo: String?,
-    val userId: Int?,
-    val balanceId: Int?,
-    val details: String?,
-    val type: Int?,
-    val currencyId: Int?,
-    val currencyType: String?,
-    val createdAt: String?,
+    val id: Int? = null,
+    val amount: Double? = null,
+    val serialNo: String? = null,
+    val userId: Int? = null,
+    val balanceId: Int? = null,
+    val details: String? = null,
+    val type: Int? = null,
+    val currencyId: Int? = null,
+    val currencyType: String? = null,
+    val createdAt: String? = null,
 )
 
 fun BalanceRecordsItemResponse.toDomain(): BalanceRecordModel {
