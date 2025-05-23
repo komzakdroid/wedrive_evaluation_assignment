@@ -1,23 +1,48 @@
 package com.komzak.wedriveevaluationassignment.presentation.ui.history
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,16 +65,16 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 object ModernHistoryConstants {
-    val ScreenPadding = 20.dp
-    val CardPadding = 16.dp
-    val CardCornerRadius = 20.dp
-    val LargeCardCornerRadius = 24.dp
-    val AvatarSize = 64.dp
-    val SpacingTiny = 4.dp
-    val SpacingSmall = 8.dp
-    val SpacingMedium = 16.dp
-    val SpacingLarge = 24.dp
-    val SpacingXLarge = 32.dp
+    val ScreenPadding = 16.dp // Reduced from 20.dp
+    val CardPadding = 12.dp // Reduced from 16.dp
+    val CardCornerRadius = 16.dp // Reduced from 20.dp
+    val LargeCardCornerRadius = 20.dp // Reduced from 24.dp
+    val AvatarSize = 48.dp // Reduced from 64.dp
+    val SpacingTiny = 2.dp // Reduced from 4.dp
+    val SpacingSmall = 6.dp // Reduced from 8.dp
+    val SpacingMedium = 12.dp // Reduced from 16.dp
+    val SpacingLarge = 18.dp // Reduced from 24.dp
+    val SpacingXLarge = 24.dp // Reduced from 32.dp
 }
 
 // Modern gradient backgrounds
@@ -100,7 +125,7 @@ private fun ModernHistoryContent(
     onRefresh: () -> Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf("All") }
+    var selectedFilter by remember { mutableStateOf("Ҳаммаси") }
 
     LaunchedEffect(uiState.isLoading) {
         isRefreshing = uiState.isLoading
@@ -108,21 +133,21 @@ private fun ModernHistoryContent(
 
     val filteredRecords = remember(uiState.records, selectedFilter) {
         when (selectedFilter) {
-            "Income" -> uiState.records.filter { it.type == 1 }
-            "Expense" -> uiState.records.filter { it.type != 1 }
+            "Кирим" -> uiState.records.filter { it.type == 1 }
+            "Чиқим" -> uiState.records.filter { it.type != 1 }
             else -> uiState.records
         }
     }
 
     val filters = listOf(
-        HistoryFilter("All", selectedFilter == "All", Icons.Default.List) {
-            selectedFilter = "All"
+        HistoryFilter("Ҳаммаси", selectedFilter == "Ҳаммаси", Icons.Default.List) {
+            selectedFilter = "Ҳаммаси"
         },
-        HistoryFilter("Income", selectedFilter == "Income", Icons.Default.KeyboardArrowUp) {
-            selectedFilter = "Income"
+        HistoryFilter("Кирим", selectedFilter == "Кирим", Icons.Default.KeyboardArrowUp) {
+            selectedFilter = "Кирим"
         },
-        HistoryFilter("Expense", selectedFilter == "Expense", Icons.Default.KeyboardArrowDown) {
-            selectedFilter = "Expense"
+        HistoryFilter("Чиқим", selectedFilter == "Чиқим", Icons.Default.KeyboardArrowDown) {
+            selectedFilter = "Чиқим"
         }
     )
 
@@ -148,12 +173,8 @@ private fun ModernHistoryContent(
                     top = ModernHistoryConstants.SpacingXLarge,
                     bottom = ModernHistoryConstants.SpacingXLarge
                 ),
-                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingLarge)
+                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium) // Reduced spacing
             ) {
-                item {
-                    ModernHistoryHeader(phone = uiState.phone)
-                }
-
                 item {
                     HistoryStatsCard(records = uiState.records)
                 }
@@ -172,20 +193,20 @@ private fun ModernHistoryContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Transaction History",
-                            style = MaterialTheme.typography.headlineSmall,
+                            text = "Транзакциялар Тарихи",
+                            style = MaterialTheme.typography.titleMedium, // Smaller typography
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Card(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp), // Slightly smaller corner radius
                             colors = CardDefaults.cardColors(
                                 containerColor = Color.White.copy(alpha = 0.2f)
                             )
                         ) {
                             Text(
-                                text = "${filteredRecords.size} items",
-                                style = MaterialTheme.typography.labelMedium,
+                                text = "${filteredRecords.size} элементлар",
+                                style = MaterialTheme.typography.labelSmall, // Smaller text
                                 color = Color.White,
                                 modifier = Modifier.padding(
                                     horizontal = ModernHistoryConstants.SpacingSmall,
@@ -230,7 +251,7 @@ private fun ModernHistoryHeader(phone: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = ModernHistoryConstants.SpacingMedium),
+            .padding(vertical = ModernHistoryConstants.SpacingSmall), // Reduced padding
         shape = RoundedCornerShape(ModernHistoryConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -239,7 +260,7 @@ private fun ModernHistoryHeader(phone: String) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(glassmorphismCard)
-                .padding(ModernHistoryConstants.SpacingLarge)
+                .padding(ModernHistoryConstants.SpacingMedium) // Reduced padding
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -248,21 +269,21 @@ private fun ModernHistoryHeader(phone: String) {
             ) {
                 Column {
                     Text(
-                        text = "HISOBCHI",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = "ҲИСОБЧИ",
+                        style = MaterialTheme.typography.titleLarge, // Smaller typography
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "Profile: $phone",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Профил: $phone",
+                        style = MaterialTheme.typography.bodySmall, // Smaller text
                         color = Color.White.copy(alpha = 0.8f)
                     )
                 }
 
                 Box(
                     modifier = Modifier
-                        .size(ModernHistoryConstants.AvatarSize)
+                        .size(ModernHistoryConstants.AvatarSize) // Smaller avatar
                         .clip(CircleShape)
                         .background(
                             Brush.radialGradient(
@@ -276,9 +297,9 @@ private fun ModernHistoryHeader(phone: String) {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_hisobchi),
-                        contentDescription = "Profile",
+                        contentDescription = "Профил",
                         tint = Color.White,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(24.dp) // Smaller icon
                     )
                 }
             }
@@ -299,20 +320,20 @@ private fun HistoryStatsCard(records: List<BalanceRecordModel>) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernHistoryConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp) // Reduced elevation
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(whiteGlassCard)
-                .padding(ModernHistoryConstants.SpacingLarge)
+                .padding(ModernHistoryConstants.SpacingMedium) // Reduced padding
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
             ) {
                 Text(
-                    text = "Account Overview",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Ҳисоб Обзори",
+                    style = MaterialTheme.typography.titleMedium, // Smaller typography
                     fontWeight = FontWeight.Bold,
                     color = primaryColor
                 )
@@ -322,25 +343,25 @@ private fun HistoryStatsCard(records: List<BalanceRecordModel>) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     StatsItem(
-                        title = "Total",
+                        title = "Жами",
                         value = totalRecords.toString(),
                         icon = Icons.Default.Settings,
                         color = Color(0xFF2196F3)
                     )
                     StatsItem(
-                        title = "Income",
+                        title = "Кирим",
                         value = incomeRecords.toString(),
                         icon = Icons.Default.KeyboardArrowUp,
                         color = Color(0xFF4CAF50)
                     )
                     StatsItem(
-                        title = "Expense",
+                        title = "Чиқим",
                         value = expenseRecords.toString(),
                         icon = Icons.Default.KeyboardArrowDown,
                         color = Color(0xFFF44336)
                     )
                     StatsItem(
-                        title = "Amount",
+                        title = "Сумма",
                         value = String.format("%.1fK", totalAmount / 1000),
                         icon = Icons.Default.Settings,
                         color = Color(0xFF9C27B0)
@@ -360,11 +381,11 @@ private fun StatsItem(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
+        verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingTiny)
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(32.dp) // Smaller size
                 .clip(CircleShape)
                 .background(color.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
@@ -373,7 +394,7 @@ private fun StatsItem(
                 imageVector = icon,
                 contentDescription = title,
                 tint = color,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(16.dp) // Smaller icon
             )
         }
         Text(
@@ -383,7 +404,7 @@ private fun StatsItem(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall, // Smaller typography
             fontWeight = FontWeight.Bold,
             color = color
         )
@@ -399,7 +420,7 @@ private fun ModernFilterSection(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernHistoryConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // Reduced elevation
     ) {
         Box(
             modifier = Modifier
@@ -408,18 +429,18 @@ private fun ModernFilterSection(
                 .padding(ModernHistoryConstants.CardPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
             ) {
                 Text(
-                    text = "Filter Transactions",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Транзакцияларни Фильтрлаш",
+                    style = MaterialTheme.typography.titleSmall, // Smaller typography
                     fontWeight = FontWeight.Bold,
                     color = primaryColor
                 )
 
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium),
-                    contentPadding = PaddingValues(horizontal = ModernHistoryConstants.SpacingSmall)
+                    horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall),
+                    contentPadding = PaddingValues(horizontal = ModernHistoryConstants.SpacingTiny)
                 ) {
                     items(filters) { filter ->
                         FilterChipButton(
@@ -445,22 +466,23 @@ private fun FilterChipButton(
     val backgroundColor = if (isSelected) primaryColor else Color.White.copy(alpha = 0.8f)
     val contentColor = if (isSelected) Color.White else primaryColor
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1f,
+        targetValue = if (isSelected) 1.03f else 1f, // Slightly less scale for compactness
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
     Card(
         modifier = Modifier
+            .padding(4.dp)
             .scale(scale),
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp), // Smaller corner radius
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(
-                horizontal = ModernHistoryConstants.SpacingMedium,
-                vertical = ModernHistoryConstants.SpacingSmall
+                horizontal = ModernHistoryConstants.SpacingSmall,
+                vertical = ModernHistoryConstants.SpacingMedium
             ),
             horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingTiny),
             verticalAlignment = Alignment.CenterVertically
@@ -468,12 +490,12 @@ private fun FilterChipButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(16.dp), // Smaller icon
                 tint = contentColor
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.bodyLarge, // Smaller typography
                 color = contentColor,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
             )
@@ -494,7 +516,7 @@ private fun ModernHistoryItem(
     val formattedDate = record.createdAt?.let {
         try {
             val zonedDateTime = ZonedDateTime.parse(it)
-            zonedDateTime.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+            zonedDateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
         } catch (e: Exception) {
             it
         }
@@ -504,7 +526,7 @@ private fun ModernHistoryItem(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernHistoryConstants.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // Reduced elevation
     ) {
         Box(
             modifier = Modifier
@@ -513,7 +535,7 @@ private fun ModernHistoryItem(
                 .padding(ModernHistoryConstants.CardPadding)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -522,31 +544,31 @@ private fun ModernHistoryItem(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium)
+                        horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(36.dp) // Smaller size
                                 .clip(CircleShape)
                                 .background(amountColor.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 painter = painterResource(iconResource),
-                                contentDescription = if (isIncome) "Income" else "Expense",
-                                modifier = Modifier.size(24.dp),
+                                contentDescription = if (isIncome) "Кирим" else "Чиқим",
+                                modifier = Modifier.size(18.dp), // Smaller icon
                                 tint = amountColor
                             )
                         }
                         Column {
                             Text(
                                 text = "$amountPrefix${record.amount ?: 0.0} ${record.currencyType ?: ""}",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleSmall, // Smaller typography
                                 fontWeight = FontWeight.Bold,
                                 color = amountColor
                             )
                             Text(
-                                text = if (isIncome) "Income" else "Expense",
+                                text = if (isIncome) "Кирим" else "Чиқим",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.Black.copy(alpha = 0.6f)
                             )
@@ -561,31 +583,31 @@ private fun ModernHistoryItem(
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Black.copy(alpha = 0.6f)
                         )
-                        if (record.serialNo != null) {
+                    /*    if (record.serialNo != null) {
                             Card(
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(6.dp), // Smaller corner radius
                                 colors = CardDefaults.cardColors(
                                     containerColor = primaryColor.copy(alpha = 0.1f)
                                 )
                             ) {
                                 Text(
-                                    text = "S/N: ${record.serialNo}",
+                                    text = "С/Н: ${record.serialNo}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = primaryColor,
                                     modifier = Modifier.padding(
-                                        horizontal = ModernHistoryConstants.SpacingSmall,
+                                        horizontal = ModernHistoryConstants.SpacingTiny,
                                         vertical = ModernHistoryConstants.SpacingTiny
                                     )
                                 )
                             }
-                        }
+                        }*/
                     }
                 }
 
                 if (!record.details.isNullOrEmpty() && record.details != "No comment") {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp), // Smaller corner radius
                         colors = CardDefaults.cardColors(
                             containerColor = Color.Black.copy(alpha = 0.05f)
                         )
@@ -593,21 +615,21 @@ private fun ModernHistoryItem(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(ModernHistoryConstants.SpacingMedium),
+                                .padding(ModernHistoryConstants.SpacingSmall),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
+                            horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingTiny)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "Details",
-                                modifier = Modifier.size(16.dp),
+                                contentDescription = "Тафсилотлар",
+                                modifier = Modifier.size(14.dp), // Smaller icon
                                 tint = Color.Black.copy(alpha = 0.6f)
                             )
                             Text(
                                 text = record.details,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodySmall, // Smaller typography
                                 color = Color.Black.copy(alpha = 0.8f),
-                                maxLines = 2,
+                                maxLines = 5,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
@@ -624,7 +646,7 @@ private fun ModernHistoryItemShimmer() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernHistoryConstants.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
@@ -634,14 +656,14 @@ private fun ModernHistoryItemShimmer() {
                 .shimmer()
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
+                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingTiny)
             ) {
                 repeat(3) { index ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(if (index == 2) 0.6f else 0.8f)
-                            .height(16.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(14.dp) // Smaller height
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color.Black.copy(alpha = 0.1f))
                     )
                 }
@@ -656,46 +678,46 @@ private fun EmptyHistoryCard(filterType: String) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(ModernHistoryConstants.LargeCardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(whiteGlassCard)
-                .padding(ModernHistoryConstants.SpacingXLarge),
+                .padding(ModernHistoryConstants.SpacingLarge),
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingMedium)
+                verticalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
             ) {
                 Icon(
                     imageVector = when (filterType) {
-                        "Income" -> Icons.Outlined.KeyboardArrowUp
-                        "Expense" -> Icons.Outlined.KeyboardArrowDown
+                        "Кирим" -> Icons.Outlined.KeyboardArrowUp
+                        "Чиқим" -> Icons.Outlined.KeyboardArrowDown
                         else -> Icons.Outlined.Settings
                     },
-                    contentDescription = "No records",
-                    modifier = Modifier.size(64.dp),
+                    contentDescription = "Ҳеч Нарса Топилмади",
+                    modifier = Modifier.size(48.dp), // Smaller icon
                     tint = Color.Black.copy(alpha = 0.3f)
                 )
                 Text(
                     text = when (filterType) {
-                        "Income" -> "No Income Records"
-                        "Expense" -> "No Expense Records"
-                        else -> "No Records Found"
+                        "Кирим" -> "Кирим Юзасидан Йўқ"
+                        "Чиқим" -> "Чиқим Юзасидан Йўқ"
+                        else -> "Ҳеч Нарса Топилмади"
                     },
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall, // Smaller typography
                     fontWeight = FontWeight.Medium,
                     color = Color.Black.copy(alpha = 0.6f)
                 )
                 Text(
                     text = when (filterType) {
-                        "Income" -> "You haven't received any payments yet"
-                        "Expense" -> "You haven't made any expenses yet"
-                        else -> "Start making transactions to see your history"
+                        "Кирим" -> "Сиз ҳали тўловларни олмадингиз"
+                        "Чиқим" -> "Сиз ҳали чиқимлар қилмадингиз"
+                        else -> "Тарихингизни кўриш учун транзакцияларни бошланг"
                     },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall, // Smaller typography
                     color = Color.Black.copy(alpha = 0.4f),
                     textAlign = TextAlign.Center
                 )
@@ -716,17 +738,17 @@ private fun ErrorCard(errorMessage: String) {
                 .fillMaxWidth()
                 .padding(ModernHistoryConstants.CardPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingSmall)
+            horizontalArrangement = Arrangement.spacedBy(ModernHistoryConstants.SpacingTiny)
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = "Error",
+                contentDescription = "Хато",
                 tint = Color(0xFFFF9800),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(20.dp) // Smaller icon
             )
             Text(
                 text = errorMessage,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall, // Smaller typography
                 color = Color(0xFFE65100)
             )
         }

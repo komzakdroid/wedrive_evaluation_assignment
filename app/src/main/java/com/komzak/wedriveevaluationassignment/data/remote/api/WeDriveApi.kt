@@ -16,6 +16,7 @@ interface WeDriveApi {
 
     suspend fun getAllBalance(): AllBalanceResponse
     suspend fun getAllBalanceById(userId: Int): AllBalanceResponse
+    suspend fun getAllBalanceRecordsById(balanceId: Int): BalanceRecordsResponse
     suspend fun getBalanceRecordsById(userId: Int): BalanceRecordsResponse
     suspend fun createTransaction(request: TransactionRequest): TransactionCreateResponse
     suspend fun getTransactionsByBalanceId(balanceId: Int): TransactionResponse

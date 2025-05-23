@@ -6,6 +6,8 @@ import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApi
 import com.komzak.wedriveevaluationassignment.data.remote.api.WeDriveApiImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceByIdRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceByIdRepositoryImpl
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRecordsByIdRepository
+import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRecordsByIdRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepository
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetAllBalanceRepositoryImpl
 import com.komzak.wedriveevaluationassignment.data.repository.dashboard.GetBalanceRecordsRepository
@@ -26,6 +28,7 @@ import com.komzak.wedriveevaluationassignment.data.repository.user.register.Crea
 import com.komzak.wedriveevaluationassignment.data.repository.user.register.CreateUserRepositoryImpl
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateUserUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceRecordsByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetBalanceRecordsUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetTransactionsByBalanceIdUseCase
@@ -59,7 +62,8 @@ val dataModule = module {
     singleOf(::TransactionsByStatusRepositoryImpl) { bind<TransactionsByStatusRepository>() }
     singleOf(::TransactionsByUserIdRepositoryImpl) { bind<TransactionsByUserIdRepository>() }
     singleOf(::GetAllBalanceByIdRepositoryImpl) { bind<GetAllBalanceByIdRepository>() }
-
+    singleOf(::GetAllBalanceByIdRepositoryImpl) { bind<GetAllBalanceByIdRepository>() }
+    singleOf(::GetAllBalanceRecordsByIdRepositoryImpl) { bind<GetAllBalanceRecordsByIdRepository>() }
 }
 
 val domainModule = module {
@@ -73,11 +77,12 @@ val domainModule = module {
     factoryOf(::GetTransactionsByStatusUseCase)
     factoryOf(::GetTransactionsByUserIdUseCase)
     factoryOf(::GetAllBalanceByIdUseCase)
+    factoryOf(::GetAllBalanceRecordsByIdUseCase)
 }
 
 val presentationModule = module {
     viewModel { LoginViewModel(get()) }
-    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(),get()) }
     viewModel { HistoryViewModel(get(), get()) }
     viewModel { OrdersHistoryViewModel(get(), get(), get(), get(), get()) }
 }

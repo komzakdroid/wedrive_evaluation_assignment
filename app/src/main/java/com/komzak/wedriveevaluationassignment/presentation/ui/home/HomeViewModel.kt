@@ -6,7 +6,9 @@ import com.komzak.wedriveevaluationassignment.common.DataResult
 import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.data.remote.model.request.TransactionRequest
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
+import com.komzak.wedriveevaluationassignment.domain.model.BalanceRecordModel
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
+import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceRecordsByIdUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.TransactionCreateUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,12 +21,15 @@ data class HomeUiState(
     val isSuccess: Boolean = false,
     val errorMessage: String? = null,
     val transactionRequest: TransactionRequest? = null,
-    val allBalances: List<BalanceModel> = emptyList()
+    val allBalances: List<BalanceModel> = emptyList(),
+    val balanceRecords: Map<Int, List<BalanceRecordModel>> = emptyMap(),
+    val selectedBalanceId: Int? = null
 )
 
 class HomeViewModel(
     private val getAllBalanceUseCase: GetAllBalanceByIdUseCase,
     private val transactionCreateUseCase: TransactionCreateUseCase,
+    private val getAllBalanceRecordsByIdUseCase: GetAllBalanceRecordsByIdUseCase,
     private val dataStoreHelper: DataStoreHelper
 ) : ViewModel() {
 
@@ -38,6 +43,12 @@ class HomeViewModel(
 
     fun refresh() {
         getAllBalance()
+    }
+
+
+    fun selectBalance(balanceId: Int) {
+        _uiState.update { it.copy(selectedBalanceId = balanceId) }
+        getBalanceRecords(balanceId)
     }
 
     fun createTransaction() {
@@ -69,6 +80,8 @@ class HomeViewModel(
                             errorMessage = null
                         )
                     }
+                    // Refresh data after successful transaction
+                    getAllBalance()
                 }
 
                 is DataResult.Error -> {
@@ -78,6 +91,25 @@ class HomeViewModel(
                             isSuccess = false,
                             errorMessage = result.error
                         )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getBalanceRecords(balanceId: Int) {
+        viewModelScope.launch {
+            when (val result = getAllBalanceRecordsByIdUseCase(balanceId)) {
+                is DataResult.Success -> {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            balanceRecords = currentState.balanceRecords + (balanceId to result.data)
+                        )
+                    }
+                }
+                is DataResult.Error -> {
+                    _uiState.update {
+                        it.copy(errorMessage = result.error)
                     }
                 }
             }
@@ -108,6 +140,10 @@ class HomeViewModel(
                                     allBalances = result.data,
                                     errorMessage = null
                                 )
+                            }
+
+                            if (result.data.isNotEmpty()) {
+                                selectBalance(result.data.first().id ?: 0)
                             }
                         }
 
