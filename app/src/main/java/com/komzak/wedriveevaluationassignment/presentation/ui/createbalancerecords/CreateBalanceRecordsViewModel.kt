@@ -3,12 +3,12 @@ package com.komzak.wedriveevaluationassignment.presentation.ui.createbalancereco
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.komzak.wedriveevaluationassignment.common.DataResult
+import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
 import com.komzak.wedriveevaluationassignment.domain.model.CreateBalanceRecordData
 import com.komzak.wedriveevaluationassignment.domain.model.UserModel
 import com.komzak.wedriveevaluationassignment.domain.usecase.CreateBalanceRecordsUseCase
 import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllBalanceByIdUseCase
-import com.komzak.wedriveevaluationassignment.domain.usecase.GetAllUsersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,34 +32,24 @@ data class CreateBalanceRecordsUiState(
 )
 
 class CreateBalanceRecordsViewModel(
-    private val getAllUsersUseCase: GetAllUsersUseCase,
     private val getAllBalanceByUserIdUseCase: GetAllBalanceByIdUseCase,
-    private val createBalanceRecordsUseCase: CreateBalanceRecordsUseCase
+    private val createBalanceRecordsUseCase: CreateBalanceRecordsUseCase,
+    private val dataStoreHelper: DataStoreHelper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateBalanceRecordsUiState())
     val uiState: StateFlow<CreateBalanceRecordsUiState> = _uiState.asStateFlow()
 
     init {
-        fetchInitialData()
+        fetchUserIds()
     }
 
-    private fun fetchInitialData() {
+    private fun fetchUserIds() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            // Fetch users
-            when (val usersResult = getAllUsersUseCase()) {
-                is DataResult.Success -> {
-                    _uiState.update { it.copy(users = usersResult.data) }
-                }
-
-                is DataResult.Error -> {
-                    _uiState.update { it.copy(errorMessage = usersResult.error) }
-                }
+            dataStoreHelper.getUID().collect { userId ->
+                _uiState.update { it.copy(selectedUserId = userId?.toInt()) }
+                selectUser(userId?.toInt() ?: 0) // Default to 0 if userId is null
             }
-
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 

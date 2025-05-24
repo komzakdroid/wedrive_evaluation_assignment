@@ -131,8 +131,8 @@ private fun ModernHistoryContent(
 
     val filteredRecords = remember(uiState.records, selectedFilter) {
         when (selectedFilter) {
-            "Кирим" -> uiState.records.filter { it.type == 1 }
-            "Чиқим" -> uiState.records.filter { it.type != 1 }
+            "Кирим" -> uiState.records.filter { it.type == 2 }
+            "Чиқим" -> uiState.records.filter { it.type == 1 }
             else -> uiState.records
         }
     }
@@ -245,71 +245,10 @@ private fun ModernHistoryContent(
 }
 
 @Composable
-private fun ModernHistoryHeader(phone: String) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = ModernHistoryConstants.SpacingSmall), // Reduced padding
-        shape = RoundedCornerShape(ModernHistoryConstants.LargeCardCornerRadius),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(glassmorphismCard)
-                .padding(ModernHistoryConstants.SpacingMedium) // Reduced padding
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "ҲИСОБЧИ",
-                        style = MaterialTheme.typography.titleLarge, // Smaller typography
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Профил: $phone",
-                        style = MaterialTheme.typography.bodySmall, // Smaller text
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(ModernHistoryConstants.AvatarSize) // Smaller avatar
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.3f),
-                                    Color.White.copy(alpha = 0.1f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_hisobchi),
-                        contentDescription = "Профил",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp) // Smaller icon
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun HistoryStatsCard(records: List<BalanceRecordModel>) {
     val totalRecords = records.size
-    val incomeRecords = records.count { it.type == 1 }
-    val expenseRecords = records.count { it.type != 1 }
+    val incomeRecords = records.count { it.type == 2 }
+    val expenseRecords = records.count { it.type == 1 }
     val totalAmount = records.fold(0.0) { acc, record ->
         acc + (record.amount?.toDouble() ?: 0.0)
     }
@@ -504,7 +443,7 @@ private fun ModernHistoryItem(
     record: BalanceRecordModel,
     modifier: Modifier = Modifier
 ) {
-    val isIncome = record.type == 1
+    val isIncome = record.type == 2
     val amountColor = if (isIncome) Color(0xFF4CAF50) else Color(0xFFF44336)
     val amountPrefix = if (isIncome) "+" else "−"
     val iconResource = if (isIncome) R.drawable.ic_incoming else R.drawable.ic_outgoing

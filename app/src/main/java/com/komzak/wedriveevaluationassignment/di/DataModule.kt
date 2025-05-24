@@ -118,7 +118,7 @@ val presentationModule = module {
     viewModel { HomeViewModel(get(), get(), get(), get()) }
     viewModel { HistoryViewModel(get(), get()) }
     viewModel { CreateBalanceRecordsViewModel(get(), get(), get()) }
-    viewModel { CreateTransactionViewModel(get(), get(), get(), get()) }
+    viewModel { CreateTransactionViewModel(get(), get(), get(), get(),get()) }
     viewModel {
         OrdersHistoryViewModel(
             get(),

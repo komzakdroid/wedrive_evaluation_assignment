@@ -40,7 +40,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -78,15 +77,14 @@ import androidx.navigation.NavController
 import com.komzak.wedriveevaluationassignment.R
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceRecordModel
+import com.komzak.wedriveevaluationassignment.domain.model.addCurrencyChar
 import com.komzak.wedriveevaluationassignment.presentation.navigation.NavRoute
 import com.komzak.wedriveevaluationassignment.presentation.theme.primaryColor
 import com.komzak.wedriveevaluationassignment.presentation.ui.dashboard.getActivity
 import com.valentinilk.shimmer.shimmer
 import org.koin.compose.viewmodel.koinViewModel
-import java.text.SimpleDateFormat
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 // Optimized constants for compact design
 object CompactScreenConstants {
@@ -112,24 +110,13 @@ private fun formatTransactionDate(isoDate: String?): String {
     return try {
         // Handle ISO 8601 format (2025-05-22T23:18:01Z)
         if (isoDate.contains("T")) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                // Use modern date-time API for API 26+
-                val zonedDateTime = ZonedDateTime.parse(isoDate)
-                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
-                zonedDateTime.format(formatter)
-            } else {
-                // Fallback for older Android versions
-                val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                val date = inputFormat.parse(isoDate)
-                date?.let { outputFormat.format(it) } ?: isoDate
-            }
+            val zonedDateTime = ZonedDateTime.parse(isoDate)
+            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+            zonedDateTime.format(formatter)
         } else {
-            // Handle simple date format if needed
             isoDate
         }
     } catch (e: Exception) {
-        // Return original string if parsing fails
         isoDate
     }
 }
@@ -467,7 +454,7 @@ private fun CompactBalanceOverviewCard(
                     }
                 }
 
-                Divider(
+                HorizontalDivider(
                     color = Color.Black.copy(alpha = 0.1f),
                     thickness = 1.dp
                 )
@@ -479,19 +466,26 @@ private fun CompactBalanceOverviewCard(
                 ) {
                     CompactOverviewItem(
                         title = "Даромад",
-                        value = String.format("%.0f", balance.outInLay ?: 0.0),
+                        value = String.format("%.0f", balance.outInLay ?: 0.0) + addCurrencyChar(
+                            balance.currencyType
+                        ),
                         icon = Icons.Default.KeyboardArrowUp,
                         color = Color(0xFF4CAF50)
                     )
                     CompactOverviewItem(
                         title = "Харажат",
-                        value = String.format("%.0f", balance.inOutLay ?: 0.0),
+                        value = String.format("%.0f", balance.inOutLay ?: 0.0) + addCurrencyChar(
+                            balance.currencyType
+                        ),
                         icon = Icons.Default.KeyboardArrowDown,
                         color = Color(0xFFF44336)
                     )
                     CompactOverviewItem(
                         title = "Фарқ",
-                        value = String.format("%.0f", netAmount),
+                        value = String.format(
+                            "%.0f",
+                            netAmount
+                        ) + addCurrencyChar(balance.currencyType),
                         icon = if (isPositiveNet) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         color = if (isPositiveNet) Color(0xFF4CAF50) else Color(0xFFF44336)
                     )
@@ -546,11 +540,11 @@ private fun EnhancedBalanceRecordCard(
     record: BalanceRecordModel,
     modifier: Modifier = Modifier
 ) {
-    val isPositive = record.type == 1
+    val isPositive = record.type == 2
 
     val transactionType = when (record.type) {
-        1 -> "Даромад"
-        2 -> "Харажат"
+        1 -> "Чиқим"
+        2 -> "Кирим"
         else -> if (isPositive) "Кирим" else "Чиқим"
     }
 
@@ -650,9 +644,9 @@ private fun EnhancedBalanceRecordCard(
                         color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
                     )
                     Text(
-                        text = record.currencyType ?: "СЎМ",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Black.copy(alpha = 0.6f)
+                        text = record.currencyType + "(${addCurrencyChar(record.currencyType)})",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Black
                     )
                 }
             }
@@ -679,16 +673,6 @@ private fun EnhancedBalanceRecordCard(
                             color = Color.Black.copy(alpha = 0.5f)
                         )
                     }
-
-                    // Serial number
-                    /*  record.serialNo?.let { serial ->
-                          Text(
-                              text = "№ $serial",
-                              style = MaterialTheme.typography.bodySmall,
-                              fontWeight = FontWeight.Medium,
-                              color = Color.Black.copy(alpha = 0.5f)
-                          )
-                      }*/
                 }
             }
         }
@@ -906,7 +890,7 @@ private fun CompactSelectionDialog(
                     )
                     Spacer(modifier = Modifier.width(CompactScreenConstants.SpacingSmall))
                     Text(
-                        text = "Буюртма яратиш",
+                        text = "Савдо қилиш",
                         color = Color.White,
                         fontWeight = FontWeight.Medium
                     )
@@ -927,7 +911,7 @@ private fun CompactSelectionDialog(
                     )
                     Spacer(modifier = Modifier.width(CompactScreenConstants.SpacingSmall))
                     Text(
-                        text = "Етказиб бериш хизмати",
+                        text = "Етказиб бериш",
                         color = Color.White,
                         fontWeight = FontWeight.Medium
                     )

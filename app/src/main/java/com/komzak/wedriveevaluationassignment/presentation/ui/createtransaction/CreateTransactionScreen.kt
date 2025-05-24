@@ -121,8 +121,7 @@ fun CreateTransactionScreen(
         onPhoneChange = { viewModel.updatePhone(it) },
         onReceiverNameChange = { viewModel.updateReceiverName(it) },
         onDetailsChange = { viewModel.updateDetails(it) },
-        onTypeChange = { viewModel.updateType(it) },
-        onUserSelected = { viewModel.selectUser(it) },
+        onReceiverSelected = { viewModel.onReceiverSelected(it) },
         onBalanceSelected = { viewModel.selectBalance(it) },
         onFromCitySelected = { viewModel.selectFromCity(it) },
         onToCitySelected = { viewModel.selectToCity(it) },
@@ -142,8 +141,7 @@ private fun CreateTransactionContent(
     onPhoneChange: (String) -> Unit,
     onReceiverNameChange: (String) -> Unit,
     onDetailsChange: (String) -> Unit,
-    onTypeChange: (Int) -> Unit,
-    onUserSelected: (Int) -> Unit,
+    onReceiverSelected: (Int) -> Unit,
     onBalanceSelected: (Int) -> Unit,
     onFromCitySelected: (Int) -> Unit,
     onToCitySelected: (Int) -> Unit,
@@ -166,7 +164,7 @@ private fun CreateTransactionContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Транзакция Яратиш", // Translated: Create Transaction
+                        text = "Етказиб бериш", // Translated: Create Transaction
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -200,6 +198,20 @@ private fun CreateTransactionContent(
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(CreateTransactionConstants.SpacingLarge)
         ) {
+            // Balance Dropdown
+            ModernDropdown(
+                label = "Балансни танлаш", // Translated: Select Balance
+                selected = uiState.balances.find { it.id == uiState.selectedBalanceId }?.currencyType,
+                items = uiState.balances.map { it.currencyType ?: "Unknown" },
+                onItemSelected = { currencyType ->
+                    val balance = uiState.balances.find { it.currencyType == currencyType }
+                    balance?.id?.let { onBalanceSelected(it) }
+                },
+                icon = Icons.Default.CheckCircle,
+                isError = uiState.errorMessage != null && uiState.selectedBalanceId == null,
+                placeholder = "Балансни танланг" // Translated: Select a balance
+            )
+
             // Amount Input
             InputCard(
                 title = "Сумма", // Translated: Amount
@@ -271,40 +283,18 @@ private fun CreateTransactionContent(
                 } else null
             )
 
-            // Type Selection (Sotish/Olish)
-            TypeSelection(
-                isSotishSelected = uiState.type == 1,
-                isOlishSelected = uiState.type == 2,
-                onSotishClick = { onTypeChange(1) },
-                onOlishClick = { onTypeChange(2) }
-            )
-
             // User Dropdown
             ModernDropdown(
-                label = "Фойдаланувчини танлаш", // Translated: Select User
-                selected = uiState.users.find { it.id == uiState.selectedUserId }?.username,
+                label = "Etkazib beruvchini tanlash", // Translated: Select User
+                selected = uiState.users.find { it.id == uiState.selectedReceiverId }?.username,
                 items = uiState.users.map { it.username },
                 onItemSelected = { username ->
                     val user = uiState.users.find { it.username == username }
-                    user?.id?.let { onUserSelected(it) }
+                    user?.id?.let { onReceiverSelected(it) }
                 },
                 icon = Icons.Default.CheckCircle,
-                isError = uiState.errorMessage != null && uiState.selectedUserId == null,
-                placeholder = "Фойдаланувчини танланг" // Translated: Select a user
-            )
-
-            // Balance Dropdown
-            ModernDropdown(
-                label = "Балансни танлаш", // Translated: Select Balance
-                selected = uiState.balances.find { it.id == uiState.selectedBalanceId }?.currencyType,
-                items = uiState.balances.map { it.currencyType ?: "Unknown" },
-                onItemSelected = { currencyType ->
-                    val balance = uiState.balances.find { it.currencyType == currencyType }
-                    balance?.id?.let { onBalanceSelected(it) }
-                },
-                icon = Icons.Default.CheckCircle,
-                isError = uiState.errorMessage != null && uiState.selectedBalanceId == null,
-                placeholder = "Балансни танланг" // Translated: Select a balance
+                isError = uiState.errorMessage != null && uiState.selectedReceiverId == null,
+                placeholder = "Етказиб берувчини танланг" // Translated: Select a user
             )
 
             // From City Dropdown

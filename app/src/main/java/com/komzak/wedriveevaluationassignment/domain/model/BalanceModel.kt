@@ -10,7 +10,7 @@ data class BalanceModel(
     val outInLay: Double?,
     val companyId: Int?,
     val currencyId: Int?,
-    val currencyType:String?,
+    val currencyType: String?,
     val createdAt: String?,
     val updatedAt: String?
 )
@@ -24,8 +24,18 @@ fun BalanceResponse.toDomain(): BalanceModel {
         outInLay = outInLay,
         companyId = companyId,
         currencyId = currencyId,
-        currencyType = currencyType,
+        currencyType = currencyType + "(${addCurrencyChar(currencyType)})",
         createdAt = createdAt,
         updatedAt = updatedAt
     )
+}
+
+fun addCurrencyChar(currencyType: String?): String {
+    return when (currencyType) {
+        "USD" -> "$"
+        "EUR" -> "€"
+        "RUB" -> "₽"
+        "UZS" -> "сўм"
+        else -> ""
+    }
 }

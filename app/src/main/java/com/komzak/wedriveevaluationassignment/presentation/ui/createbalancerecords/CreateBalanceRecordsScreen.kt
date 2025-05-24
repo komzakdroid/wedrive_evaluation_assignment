@@ -160,7 +160,7 @@ private fun CreateBalanceRecordsContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Баланс Яратиш", // Translated: Create Balance Record
+                        text = "Савдо қилиш", // Translated: Create Balance Record
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -194,6 +194,20 @@ private fun CreateBalanceRecordsContent(
                 .imePadding(), // Adjust for keyboard
             verticalArrangement = Arrangement.spacedBy(CreateBalanceConstants.SpacingLarge)
         ) {
+            // Balance Dropdown
+            ModernDropdown(
+                label = "Балансни танлаш", // Translated: Select Balance
+                selected = uiState.balances.find { it.id == uiState.selectedBalanceId }?.currencyType,
+                items = uiState.balances.map { it.currencyType ?: "Unknown" },
+                onItemSelected = { currencyType ->
+                    val balance = uiState.balances.find { it.currencyType == currencyType }
+                    balance?.id?.let { onBalanceSelected(it) }
+                },
+                icon = Icons.Default.CheckCircle,
+                isError = uiState.errorMessage != null && uiState.selectedBalanceId == null,
+                placeholder = "Балансни танланг" // Translated: Select a balance
+            )
+
             // Amount Input
             InputCard(
                 title = "Сумма", // Translated: Amount
@@ -229,7 +243,7 @@ private fun CreateBalanceRecordsContent(
             )
 
             // User Dropdown
-            ModernDropdown(
+        /*    ModernDropdown(
                 label = "Фойдаланувчини танлаш", // Translated: Select User
                 selected = uiState.users.find { it.id == uiState.selectedUserId }?.username,
                 items = uiState.users.map { it.username },
@@ -240,21 +254,7 @@ private fun CreateBalanceRecordsContent(
                 icon = Icons.Default.CheckCircle,
                 isError = uiState.errorMessage != null && uiState.selectedUserId == null,
                 placeholder = "Фойдаланувчини танланг" // Translated: Select a user
-            )
-
-            // Balance Dropdown
-            ModernDropdown(
-                label = "Балансни танлаш", // Translated: Select Balance
-                selected = uiState.balances.find { it.id == uiState.selectedBalanceId }?.currencyType,
-                items = uiState.balances.map { it.currencyType ?: "Unknown" },
-                onItemSelected = { currencyType ->
-                    val balance = uiState.balances.find { it.currencyType == currencyType }
-                    balance?.id?.let { onBalanceSelected(it) }
-                },
-                icon = Icons.Default.CheckCircle,
-                isError = uiState.errorMessage != null && uiState.selectedBalanceId == null,
-                placeholder = "Балансни танланг" // Translated: Select a balance
-            )
+            )*/
 
             // Submit Button
             AnimatedVisibility(
@@ -436,7 +436,7 @@ private fun TypeSelection(
                 verticalArrangement = Arrangement.spacedBy(CreateBalanceConstants.SpacingSmall)
             ) {
                 Text(
-                    text = "Тур", // Translated: Type
+                    text = "Савдониг танланг:", // Translated: Type
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = primaryColor

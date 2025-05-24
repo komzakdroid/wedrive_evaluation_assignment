@@ -252,7 +252,7 @@ private fun ModernOrdersHistoryContent(
                             transaction = transaction,
                             modifier = Modifier.animateItemPlacement(),
                             onClick = {
-                                if (transaction.status == 1L) {
+                                if (transaction.status == 1L && isQabulQilinganSelected) {
                                     selectedTransactionSerialNo = transaction.serialNo
                                     showCompleteDialog = true
                                 }

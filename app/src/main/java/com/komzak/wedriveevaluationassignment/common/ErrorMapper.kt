@@ -22,9 +22,16 @@ fun <S> mapErrorToMessage(error: AppError, resource: ResourceProvider): DataResu
     val errorMessage = when (error) {
         AppError.NetworkError -> resource.getString(R.string.network_error)
         is AppError.ServerError -> {
+            // Prioritize backend error message if available and not blank
             error.message?.takeIf { it.isNotBlank() }
                 ?: resource.getString(mapStatusCodeToErrorType(error.statusCode).stringResId)
         }
     }
     return DataResult.Error(errorMessage)
+}
+
+// Extension function to make error handling more readable
+fun AppError.ServerError.getDisplayMessage(resource: ResourceProvider): String {
+    return message?.takeIf { it.isNotBlank() }
+        ?: resource.getString(mapStatusCodeToErrorType(statusCode).stringResId)
 }

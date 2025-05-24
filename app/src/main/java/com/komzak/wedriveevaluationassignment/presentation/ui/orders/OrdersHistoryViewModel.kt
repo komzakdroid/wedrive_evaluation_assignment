@@ -201,6 +201,7 @@ class OrdersHistoryViewModel(
     private fun fetchTransactions() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val currentUserId = dataStoreHelper.getUID().first()?.toInt()
 
             val result = when {
                 _uiState.value.selectedDateRange != null -> {
@@ -217,11 +218,11 @@ class OrdersHistoryViewModel(
                 }
 
                 _uiState.value.selectedReceiverId != null -> {
-                    getTransactionsByReceiverIdUseCase(_uiState.value.selectedReceiverId!!)
+                    getTransactionsByReceiverIdUseCase(currentUserId?:0)
                 }
 
                 _uiState.value.selectedUserId != null -> {
-                    getTransactionsByUserIdUseCase(_uiState.value.selectedUserId!!)
+                    getTransactionsByUserIdUseCase(currentUserId?:0)
                 }
 
                 else -> {

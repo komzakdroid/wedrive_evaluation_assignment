@@ -54,8 +54,20 @@ object ApiErrorHandler {
                 is ServerResponseException -> exception.response.bodyAsText()
                 else -> return null
             }
+
+            Log.d(TAG, "Response body: $responseBody") // For debugging
+
             val json = Json.parseToJsonElement(responseBody).jsonObject
-            json["error"]?.jsonPrimitive?.content
+
+            // Try multiple possible error keys that backends commonly use
+            val errorMessage = json["Error"]?.jsonPrimitive?.content
+                ?: json["error"]?.jsonPrimitive?.content
+                ?: json["message"]?.jsonPrimitive?.content
+                ?: json["Message"]?.jsonPrimitive?.content
+                ?: json["errorMessage"]?.jsonPrimitive?.content
+                ?: json["detail"]?.jsonPrimitive?.content
+
+            errorMessage?.ifBlank { null }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse error message", e)
             null

@@ -3,6 +3,7 @@ package com.komzak.wedriveevaluationassignment.presentation.ui.createtransaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.komzak.wedriveevaluationassignment.common.DataResult
+import com.komzak.wedriveevaluationassignment.data.local.DataStoreHelper
 import com.komzak.wedriveevaluationassignment.domain.model.BalanceModel
 import com.komzak.wedriveevaluationassignment.domain.model.CityModel
 import com.komzak.wedriveevaluationassignment.domain.model.CreateTransactionData
@@ -24,6 +25,7 @@ data class CreateTransactionUiState(
     val details: String = "",
     val type: Int = 1, // 1 for sotish, 2 for olish
     val selectedUserId: Int? = null,
+    val selectedReceiverId: Int? = null,
     val selectedBalanceId: Int? = null,
     val selectedCurrencyId: Int? = null,
     val selectedCompanyId: Int? = null,
@@ -42,22 +44,46 @@ class CreateTransactionViewModel(
     private val getAllUsersUseCase: GetAllUsersUseCase,
     private val getAllBalanceByUserIdUseCase: GetAllBalanceByIdUseCase,
     private val getAllCitiesUseCase: GetAllCitiesUseCase,
-    private val createTransactionUseCase: CreateTransactionUseCase
+    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val dataStoreHelper: DataStoreHelper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateTransactionUiState())
     val uiState: StateFlow<CreateTransactionUiState> = _uiState.asStateFlow()
 
     init {
-        fetchInitialData()
+        fetchBalanceUserId()
+        fetchCommonData()
     }
 
-    private fun fetchInitialData() {
+    private fun fetchBalanceUserId() {
+        viewModelScope.launch {
+            dataStoreHelper.getUID().collect { userId ->
+                if (userId != null) {
+                    _uiState.update { it.copy(selectedUserId = userId.toInt()) }
+                    fetchBalances(userId.toInt())
+                } else {
+                    _uiState.update { it.copy(errorMessage = "User ID not found") }
+                }
+            }
+        }
+    }
+
+    private fun fetchCommonData() {
         viewModelScope.launch {
             // Fetch users
             when (val usersResult = getAllUsersUseCase()) {
                 is DataResult.Success -> {
                     _uiState.update { it.copy(users = usersResult.data) }
+                    //we need to remove the current user from the list of users
+                    val currentUserId = _uiState.value.selectedUserId
+                    if (currentUserId != null) {
+                        _uiState.update { state ->
+                            state.copy(
+                                users = state.users.filterNot { it.id == currentUserId }
+                            )
+                        }
+                    }
                 }
 
                 is DataResult.Error -> {
@@ -98,13 +124,8 @@ class CreateTransactionViewModel(
         _uiState.update { it.copy(receiverName = name) }
     }
 
-    fun updateType(type: Int) {
-        _uiState.update { it.copy(type = type) }
-    }
-
-    fun selectUser(userId: Int) {
-        _uiState.update { it.copy(selectedUserId = userId) }
-        fetchBalances(userId)
+    fun onReceiverSelected(userId: Int) {
+        _uiState.update { it.copy(selectedReceiverId = userId) }
     }
 
     fun selectBalance(balanceId: Int) {
@@ -169,7 +190,8 @@ class CreateTransactionViewModel(
                 senderId = state.selectedUserId ?: 0,
                 fromCityId = state.selectedFromCityId ?: 0,
                 toCityId = state.selectedToCityId ?: 0,
-                receiverId = state.selectedUserId ?: 0, // Assuming sender and receiver can be same
+                receiverId = state.selectedReceiverId
+                    ?: 0, // Assuming sender and receiver can be same
                 receiverName = state.receiverName,
                 receiverPhone = state.phone,
                 details = state.details,
